@@ -1,0 +1,224 @@
+/* ============================================================
+   Bharat Industries — Cost Estimator
+   Shared theme: variables, reset, login gate, titleblock,
+   buttons, generic cards, cloud modal, footer.
+   Page-specific styles (item tables, weight calculator,
+   cost summary panel) live inline in each calculator page.
+   ============================================================ */
+
+:root{
+  --navy:#0b1f33;
+  --navy-2:#132a42;
+  --navy-3:#1c3a5a;
+  --teal:#0f9d8f;
+  --teal-2:#14b8a6;
+  --teal-line:rgba(15,157,143,0.22);
+  --amber:#f2a53c;
+  --amber-2:#c9852a;
+  --paper:#eef2f1;
+  --card:#ffffff;
+  --ink:#16232e;
+  --ink-soft:#5b6b78;
+  --border:#d7e0e2;
+  --danger:#c0392b;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(11,31,51,0.06), 0 8px 24px rgba(11,31,51,0.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'IBM Plex Sans', system-ui, sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:var(--teal-line); }
+:focus-visible{ outline:2px solid var(--teal-2); outline-offset:2px; }
+button, input, select{ font-family:inherit; font-size:inherit; }
+h1,h2,h3{ margin:0; font-family:'IBM Plex Sans', sans-serif; }
+.mono{ font-family:'IBM Plex Mono', monospace; }
+a{ color:inherit; text-decoration:none; }
+
+/* ---------- Login gate ---------- */
+#loginOverlay{
+  position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(15,157,143,0.12) 27px, rgba(15,157,143,0.12) 28px),
+    repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(15,157,143,0.12) 27px, rgba(15,157,143,0.12) 28px),
+    linear-gradient(160deg, var(--navy) 0%, #08141f 100%);
+  padding:20px;
+}
+.login-card{
+  background:var(--card); border-radius:14px; padding:34px 30px 28px; width:100%; max-width:360px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.35); text-align:center;
+}
+.login-logo{
+  width:56px;height:56px;border:1.5px dashed var(--border); border-radius:10px; margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center; font-size:10px; color:var(--ink-soft); letter-spacing:.06em;
+}
+.login-brand{ font-size:17px; font-weight:700; color:var(--navy); letter-spacing:.02em; }
+.login-sub{ font-size:11.5px; color:var(--ink-soft); margin:3px 0 22px; text-transform:uppercase; letter-spacing:.08em; }
+.login-field{ text-align:left; margin-bottom:13px; }
+.login-field label{ display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; font-weight:500; }
+.login-field input{ width:100%; border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-size:13.5px; }
+.login-field input:focus{ border-color:var(--teal); }
+.login-error{ color:var(--danger); font-size:12px; min-height:16px; margin:2px 0 10px; }
+.login-btn{ width:100%; background:var(--navy); color:#fff; border:none; border-radius:8px; padding:11px; font-weight:600; font-size:13.5px; cursor:pointer; margin-top:4px; }
+.login-btn:hover{ background:var(--navy-3); }
+.login-btn:disabled{ opacity:.65; cursor:default; }
+.login-note{ font-size:10.5px; color:#9aa8b0; margin-top:16px; line-height:1.5; }
+
+#appRoot.locked-blur{ filter:blur(10px); pointer-events:none; user-select:none; }
+
+/* ---------- Cloud save/open modal + shared list item ---------- */
+.cloud-modal-overlay{
+  position:fixed; inset:0; z-index:900; background:rgba(11,31,51,0.55);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.cloud-modal{
+  background:var(--card); border-radius:12px; width:100%; max-width:480px; max-height:80vh;
+  display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;
+}
+.cloud-modal-head{
+  display:flex; align-items:center; justify-content:space-between; padding:14px 18px;
+  background:var(--navy); color:#fff;
+}
+.cloud-modal-head h3{ font-size:13px; text-transform:uppercase; letter-spacing:.06em; }
+.cloud-modal-head .icon-btn{ color:#cfe3df; }
+.cloud-modal-head .icon-btn:hover{ background:rgba(255,255,255,.12); color:#fff; }
+.cloud-modal-body{ padding:8px; overflow-y:auto; }
+.cloud-modal-empty{ color:var(--ink-soft); font-size:13px; padding:20px 14px; text-align:center; }
+.cloud-item{
+  display:flex; flex-direction:column; gap:2px; width:100%; text-align:left;
+  border:none; border-bottom:1px solid #eef1f2; background:transparent; cursor:pointer;
+  padding:11px 12px; border-radius:8px;
+}
+.cloud-item:hover{ background:#f2fbfa; }
+.cloud-item-title{ font-size:13.5px; font-weight:600; color:var(--ink); }
+.cloud-item-sub{ font-size:11.5px; color:var(--ink-soft); }
+.cloud-item-type{
+  display:inline-block; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--teal); font-weight:700; margin-right:6px;
+}
+
+.icon-btn{
+  border:none; background:transparent; color:#b6bfc4; cursor:pointer; font-size:13px;
+  width:26px; height:26px; border-radius:6px; line-height:1;
+}
+.icon-btn:hover{ background:#fdecea; color:var(--danger); }
+
+/* ---------- Title block (signature element) ---------- */
+.titleblock{
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, var(--teal-line) 27px, var(--teal-line) 28px),
+    repeating-linear-gradient(90deg, transparent, transparent 27px, var(--teal-line) 27px, var(--teal-line) 28px),
+    linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+  color:#e7f1ef;
+  padding:20px clamp(16px,3vw,40px) 0;
+}
+.titleblock-top{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  max-width:1440px; margin:0 auto; padding-bottom:16px;
+}
+.brand-block{ display:flex; align-items:center; gap:14px; }
+.logo-placeholder{
+  width:52px;height:52px;border:1.5px dashed rgba(255,255,255,.35); border-radius:8px; flex-shrink:0;
+  display:flex;align-items:center;justify-content:center; font-size:9.5px; letter-spacing:.06em; color:rgba(255,255,255,.5);
+}
+.brand-name{ font-size:16px; font-weight:700; letter-spacing:.02em; color:#fff; }
+.titleblock-eyebrow{
+  text-transform:uppercase; letter-spacing:.14em; font-size:10.5px; color:var(--teal-2); font-weight:600; margin-top:2px;
+}
+.titleblock-top h1{ font-size:19px; font-weight:700; margin-top:4px; color:#fff; }
+.tb-right{ display:flex; align-items:center; gap:12px; }
+.user-badge{ display:flex; align-items:center; gap:8px; }
+.user-badge-email{ font-size:11.5px; color:#c9dbd6; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.user-badge button, .user-badge a{
+  background:transparent; border:1px solid rgba(255,255,255,.28); color:#e7f1ef;
+  border-radius:6px; padding:5px 10px; font-size:11.5px; cursor:pointer; display:inline-block;
+}
+.user-badge button:hover, .user-badge a:hover{ border-color:var(--teal-2); color:var(--teal-2); }
+.rev-stamp{
+  border:2px solid var(--amber); color:var(--amber);
+  padding:6px 14px; border-radius:6px; font-family:'IBM Plex Mono',monospace;
+  font-weight:700; font-size:13px; letter-spacing:.05em; white-space:nowrap;
+  transform:rotate(-2deg);
+}
+.titleblock-grid{
+  max-width:1440px; margin:0 auto;
+  display:grid; grid-template-columns:repeat(6,1fr);
+  border-top:1px solid var(--teal-line);
+}
+.tb-field{
+  padding:10px 14px; border-right:1px solid var(--teal-line); border-bottom:1px solid var(--teal-line);
+}
+.tb-field:last-child{ border-right:none; }
+.tb-field label{
+  display:block; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+  color:#8fb3ac; margin-bottom:4px;
+}
+.tb-field input, .tb-field textarea{
+  width:100%; background:transparent; border:none; color:#fff;
+  font-family:'IBM Plex Mono', monospace; font-size:13px; padding:0; resize:none;
+}
+.tb-field textarea{ height:34px; line-height:1.3; }
+.tb-field input::placeholder, .tb-field textarea::placeholder{ color:#5c7a86; }
+.tb-wide{ grid-column:span 2; }
+
+/* ---------- Layout shell ---------- */
+.app-layout{
+  max-width:1440px; margin:0 auto; padding:22px clamp(16px,3vw,40px) 60px;
+  display:grid; grid-template-columns:1fr 380px; gap:22px; align-items:start;
+}
+@media (max-width:980px){
+  .app-layout{ grid-template-columns:1fr; }
+}
+.intro-line{
+  color:var(--ink-soft); font-size:13px; margin:16px 0 6px;
+  max-width:1440px; margin-left:auto; margin-right:auto; padding:0 clamp(16px,3vw,40px);
+}
+
+/* ---------- Buttons / toolbar ---------- */
+.toolbar{
+  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;
+}
+.btn{
+  appearance:none; border:1px solid var(--border); background:var(--card);
+  color:var(--ink); padding:8px 13px; border-radius:8px; font-weight:500; font-size:12.5px;
+  cursor:pointer; transition:border-color .15s, color .15s, background .15s;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.btn:hover{ border-color:var(--teal); color:var(--teal); }
+.btn-primary{ background:var(--navy); border-color:var(--navy); color:#fff; }
+.btn-primary:hover{ background:var(--navy-3); border-color:var(--navy-3); color:#fff; }
+.btn-ghost{ border-style:dashed; }
+.btn-danger:hover{ border-color:var(--danger); color:var(--danger); }
+.btn:disabled, .btn.disabled{ opacity:.5; cursor:default; pointer-events:none; }
+
+/* ---------- Generic card / section wrapper ---------- */
+.section-block{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  margin-bottom:16px; box-shadow:var(--shadow); overflow:hidden;
+}
+.section-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 16px; background:linear-gradient(180deg,#0f2c46,#0c2338);
+  color:#fff;
+}
+.section-header h3{ font-size:13px; letter-spacing:.04em; text-transform:uppercase; font-weight:600; }
+.section-subtotal{ font-family:'IBM Plex Mono',monospace; color:var(--teal-2); font-weight:600; font-size:13px; }
+
+footer.note{
+  max-width:1440px; margin:0 auto; padding:0 clamp(16px,3vw,40px) 40px; color:var(--ink-soft); font-size:12px;
+}
+
+/* ---------- Print (base — pages add their own specifics) ---------- */
+@media print{
+  body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  #loginOverlay{ display:none !important; }
+  #appRoot{ filter:none !important; }
+  .toolbar, .no-print{ display:none !important; }
+  .section-block{ box-shadow:none; break-inside:avoid; }
+}

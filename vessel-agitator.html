@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bharat Industries — Cost Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+  /* ---------- Page-specific: item tables, weight calc, cost summary ---------- */
+.table-scroll{ overflow-x:auto; }
+  table.items-table{ width:100%; border-collapse:collapse; min-width:840px; }
+  .items-table thead th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-soft); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--border);
+    background:#f7fafa; white-space:nowrap;
+  }
+  .items-table td{ padding:5px 8px; border-bottom:1px solid #eef1f2; vertical-align:middle; }
+  .items-table tr:last-child td{ border-bottom:none; }
+  .items-table input, .items-table select{
+    width:100%; border:1px solid transparent; background:transparent; border-radius:5px;
+    padding:6px 7px; color:var(--ink);
+  }
+  .items-table input:hover, .items-table select:hover{ border-color:var(--border); }
+  .items-table input:focus, .items-table select:focus{ border-color:var(--teal); background:#fff; }
+  .items-table input[type="number"]{ font-family:'IBM Plex Mono',monospace; text-align:right; }
+  .items-table input[readonly]{ color:var(--teal-2); font-weight:600; background:#f2fbfa; }
+  .items-table input[disabled]{ color:#b7c1c6; }
+  .col-part input{ min-width:130px; font-weight:500; }
+  .col-desc input{ min-width:170px; color:var(--ink-soft); }
+  .col-num{ width:78px; }
+  .col-weight{ width:112px; }
+  .col-basis{ width:84px; }
+  .col-type{ width:96px; }
+  .col-amount{
+    font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:600;
+    white-space:nowrap; padding-right:14px !important;
+  }
+  .col-del{ width:32px; text-align:center; }
+  .icon-btn{
+    border:none; background:transparent; color:#b6bfc4; cursor:pointer; font-size:13px;
+    width:26px; height:26px; border-radius:6px; line-height:1;
+  }
+  .icon-btn:hover{ background:#fdecea; color:var(--danger); }
+  .add-row-btn{
+    width:100%; text-align:left; border:none; border-top:1px dashed var(--border);
+    background:#fafcfc; color:var(--teal); font-size:12.5px; font-weight:500;
+    padding:9px 16px; cursor:pointer;
+  }
+  .add-row-btn:hover{ background:#eef8f6; }
+  .add-section-row{ text-align:center; margin:6px 0 20px; }
+
+  /* ---------- Weight calculator ---------- */
+  .weight-wrap{ display:flex; align-items:center; gap:3px; }
+  .weight-wrap input{ flex:1; min-width:0; }
+  .calc-toggle{
+    flex-shrink:0; width:24px; height:24px; border:1px solid var(--border); background:#fafcfc; border-radius:6px;
+    cursor:pointer; font-size:12px; color:var(--ink-soft); line-height:1;
+  }
+  .calc-toggle:hover{ border-color:var(--teal); color:var(--teal); }
+  .calc-toggle.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+  tr.calc-row td{ background:#f5f9f9; padding:12px 16px; border-bottom:1px solid var(--border); }
+  .calc-panel{ display:flex; flex-direction:column; gap:10px; }
+  .calc-panel-row{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px; }
+  .calc-panel-row label{ display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-soft); font-weight:500; }
+  .calc-panel-row input, .calc-panel-row select{
+    border:1px solid var(--border); border-radius:6px; padding:6px 8px; font-size:13px; min-width:110px; color:var(--ink);
+    font-family:'IBM Plex Mono',monospace; background:#fff;
+  }
+  .calc-panel-row select{ font-family:'IBM Plex Sans',sans-serif; min-width:190px; }
+  .calc-density-hint{ font-size:11.5px; color:var(--ink-soft); padding-bottom:7px; }
+  .calc-result{ font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--teal-2); font-size:14px; padding-bottom:6px; }
+  .calc-result strong{ font-size:15px; }
+
+  /* ---------- Summary panel ---------- */
+  .summary-panel{
+    position:sticky; top:16px; background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+  }
+  @media (max-width:980px){ .summary-panel{ position:static; } }
+  .summary-head{
+    background:var(--navy); color:#fff; padding:14px 18px;
+  }
+  .summary-head h2{ font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+  .summary-body{ padding:14px 18px 18px; }
+  .sum-row{
+    display:flex; align-items:baseline; justify-content:space-between; padding:6px 0;
+    font-size:13px; border-bottom:1px solid #f0f2f3;
+  }
+  .sum-row .label{ color:var(--ink-soft); }
+  .sum-row .value{ font-family:'IBM Plex Mono',monospace; font-weight:600; }
+  .sum-row.subtle{ font-size:12px; color:var(--ink-soft); }
+  .sum-row.total-line{ border-bottom:2px solid var(--navy); font-weight:700; }
+  .sum-group-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--teal); font-weight:700; margin:14px 0 2px; }
+  .pct-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; }
+  .pct-row .label{ font-size:12.5px; color:var(--ink); }
+  .pct-input-wrap{ display:flex; align-items:center; gap:4px; }
+  .pct-input-wrap input{
+    width:58px; text-align:right; font-family:'IBM Plex Mono',monospace; border:1px solid var(--border);
+    border-radius:6px; padding:5px 6px; color:var(--ink);
+  }
+  .pct-input-wrap input:focus{ border-color:var(--teal); }
+  .pct-input-wrap span{ font-size:12px; color:var(--ink-soft); }
+  .chips{ display:flex; flex-wrap:wrap; gap:5px; margin:4px 0 2px; }
+  .chip{
+    border:1px solid var(--border); background:#fafcfc; color:var(--ink-soft); font-size:11px;
+    padding:3px 8px; border-radius:999px; cursor:pointer;
+  }
+  .chip:hover{ border-color:var(--teal); color:var(--teal); }
+  .mode-toggle{ display:flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; margin-top:4px; }
+  .mode-toggle button{
+    flex:1; border:none; background:#fafcfc; color:var(--ink-soft); font-size:11.5px; padding:6px 4px; cursor:pointer;
+  }
+  .mode-toggle button.active{ background:var(--navy); color:#fff; }
+
+  .final-stamp{
+    margin-top:16px; background:linear-gradient(180deg,#fdf3e2,#fbe8c8);
+    border:1px solid #eecf94; border-radius:10px; padding:14px 16px; text-align:right;
+  }
+  .final-stamp .label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--amber-2); font-weight:700; }
+  .final-stamp .amount{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:700; color:#7a4e0f; }
+  .final-stamp .sub{ font-size:11.5px; color:#93712f; margin-top:2px; }
+  .order-value{
+    margin-top:10px; display:flex; align-items:center; justify-content:space-between;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .order-value input{
+    width:56px; text-align:center; font-family:'IBM Plex Mono',monospace; border:1px solid var(--border);
+    border-radius:6px; padding:4px; margin:0 6px;
+  }
+
+  
+  /* ---------- Page-specific print overrides ---------- */
+  @media print{
+    .toolbar, .add-row-btn, .add-section-row, .icon-btn, .calc-toggle, .no-print{ display:none !important; }
+    .app-layout{ grid-template-columns:1fr; display:block; }
+    .summary-panel{ position:static; margin-top:20px; }
+    .items-table input, .items-table select{ border:none !important; background:transparent !important; }
+  }
+
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo" aria-hidden="true">LOGO</div>
+    <div class="login-brand">Bharat Industries</div>
+    <div class="login-sub">Cost Estimator — Sign in</div>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <label for="loginUser">Email</label>
+        <input type="email" id="loginUser" autocomplete="username" autofocus />
+      </div>
+      <div class="login-field">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" />
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn" id="loginSubmitBtn">Sign in</button>
+    </form>
+    <div class="login-note">Accounts are created by an admin in the Firebase console — there is no public sign-up. Contact your admin if you need access.</div>
+  </div>
+</div>
+
+<div id="appRoot" class="locked-blur">
+
+<div class="titleblock">
+  <div class="titleblock-top">
+    <div class="brand-block">
+      <div class="logo-placeholder" aria-hidden="true">LOGO</div>
+      <div>
+        <div class="brand-name">Bharat Industries</div>
+        <div class="titleblock-eyebrow">Cost Estimation Worksheet</div>
+        <h1 id="pageHeading">3 KL Reactor</h1>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="user-badge no-print" id="userBadge">
+        <a href="index.html">← Dashboard</a>
+        <span class="user-badge-email" id="userEmail"></span>
+        <button type="button" id="signOutBtn">Sign out</button>
+      </div>
+      <div class="rev-stamp mono"><span id="revLabel">R00</span></div>
+    </div>
+  </div>
+  <div class="titleblock-grid">
+    <div class="tb-field tb-wide">
+      <label for="mCompany">Works / Company Address</label>
+      <textarea id="mCompany" placeholder="Company name and works address">Plot no. 906/5, Nr. Ganesh Anand Chowkadi, G.I.D.C. Industrial Estate, Panoli - 394116, Dist. Bharuch, Gujarat.</textarea>
+    </div>
+    <div class="tb-field">
+      <label for="mClient">Client Name</label>
+      <input id="mClient" type="text" placeholder="—" />
+    </div>
+    <div class="tb-field">
+      <label for="mEquipment">Equipment</label>
+      <input id="mEquipment" type="text" value="3 KL Reactor" />
+    </div>
+    <div class="tb-field">
+      <label for="mQuotNo">Quotation #</label>
+      <input id="mQuotNo" type="text" placeholder="—" />
+    </div>
+    <div class="tb-field">
+      <label for="mDate">Date</label>
+      <input id="mDate" type="date" value="2026-08-01" />
+    </div>
+  </div>
+</div>
+
+<p class="intro-line">Enter part-wise material &amp; labour costs below — click the <strong>⚙</strong> next to any weight to auto-calculate it from material and dimensions. RMC, scrap, labour, overhead, late-payment loading and profit margin update live in the summary.</p>
+
+<div class="app-layout">
+
+  <main>
+    <div class="toolbar no-print">
+      <button class="btn btn-primary" data-action="cloud-save" type="button">☁ Save to Cloud</button>
+      <button class="btn" data-action="cloud-open" type="button">📂 Open Saved</button>
+      <button class="btn btn-ghost" data-action="new-estimate" type="button">＋ New Estimate</button>
+      <button class="btn btn-ghost" data-action="add-section" type="button">+ Add section</button>
+      <button class="btn" data-action="export-json" type="button">Export JSON</button>
+      <button class="btn" data-action="import-json" type="button">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button class="btn" data-action="export-csv" type="button">Export CSV</button>
+      <button class="btn btn-primary" data-action="print" type="button">Print / Save PDF</button>
+      <button class="btn btn-danger" data-action="clear-all" type="button" style="margin-left:auto;">Clear all items</button>
+    </div>
+
+    <div id="lineItemsContainer"></div>
+
+    <div class="add-section-row no-print">
+      <button class="btn btn-ghost" data-action="add-section" type="button">+ Add another section</button>
+    </div>
+  </main>
+
+  <aside class="summary-panel">
+    <div class="summary-head"><h2>Cost Summary</h2></div>
+    <div class="summary-body">
+
+      <div class="sum-row"><span class="label">Total fabricated weight</span><span class="value" id="sumWeight">0 kg</span></div>
+
+      <div class="sum-group-title">Manufacturing Cost</div>
+      <div class="sum-row"><span class="label">Raw Material Cost (RMC)</span><span class="value" id="sumRMC">₹0</span></div>
+
+      <div class="pct-row">
+        <span class="label">Scrap / wastage on RMC</span>
+        <div class="pct-input-wrap"><input type="number" id="scrapPct" value="3" step="0.5" /><span>%</span></div>
+      </div>
+      <div class="sum-row subtle"><span class="label">Scrap amount</span><span class="value" id="sumScrap">₹0</span></div>
+
+      <div class="sum-row"><span class="label">Labour &amp; Processing</span><span class="value" id="sumLabour">₹0</span></div>
+
+      <div class="pct-row">
+        <span class="label">Overhead (T&amp;A) on RMC+Scrap+Labour</span>
+        <div class="pct-input-wrap"><input type="number" id="overheadPct" value="15" step="0.5" /><span>%</span></div>
+      </div>
+      <div class="sum-row subtle"><span class="label">Overhead amount</span><span class="value" id="sumOverhead">₹0</span></div>
+
+      <div class="sum-row total-line"><span class="label">Base Manufacturing Cost</span><span class="value" id="sumBase">₹0</span></div>
+
+      <div class="sum-group-title">Commercial Loading</div>
+      <div class="pct-row">
+        <span class="label">Late-payment / credit-term loading</span>
+        <div class="pct-input-wrap"><input type="number" id="latePct" value="0" step="0.5" /><span>%</span></div>
+      </div>
+      <div class="chips no-print" id="latePresets">
+        <button class="chip" type="button" data-pct="0">Advance</button>
+        <button class="chip" type="button" data-pct="1">30D · 1%</button>
+        <button class="chip" type="button" data-pct="2">60D · 2%</button>
+        <button class="chip" type="button" data-pct="3">90D · 3%</button>
+        <button class="chip" type="button" data-pct="4">120D · 4%</button>
+      </div>
+      <div class="sum-row subtle"><span class="label">Late-payment amount</span><span class="value" id="sumLate">₹0</span></div>
+      <div class="sum-row"><span class="label">Cost after loading</span><span class="value" id="sumCostAfterLate">₹0</span></div>
+
+      <div class="pct-row">
+        <span class="label" id="profitLabel">Profit margin (markup on cost)</span>
+        <div class="pct-input-wrap"><input type="number" id="profitPct" value="15" step="0.5" /><span>%</span></div>
+      </div>
+      <div class="mode-toggle no-print">
+        <button type="button" class="active" data-mode="markup">Markup on cost</button>
+        <button type="button" data-mode="margin">Margin on price</button>
+      </div>
+      <div class="sum-row subtle"><span class="label">Profit amount</span><span class="value" id="sumProfit">₹0</span></div>
+      <div class="sum-row subtle"><span class="label">Effective margin on final price</span><span class="value" id="sumEffMargin">0%</span></div>
+
+      <div class="final-stamp">
+        <div class="label">Final Quotation Price / unit</div>
+        <div class="amount" id="sumFinal">₹0</div>
+        <div class="sub">incl. scrap, labour, overhead, credit loading &amp; profit</div>
+      </div>
+
+      <div class="order-value">
+        <span>No. of units</span>
+        <input type="number" id="unitsInput" value="1" min="1" step="1" />
+        <span class="value mono" id="sumOrderValue">₹0</span>
+      </div>
+
+    </div>
+  </aside>
+
+</div>
+
+<footer class="note no-print">
+  Basis: <strong>₹/kg</strong> rows compute Amount = Weight × Qty × Rate. <strong>₹/unit</strong> rows compute Amount = Qty × Rate (use for bought-outs, lump-sum and labour items). Click <strong>⚙</strong> next to Weight to auto-calculate it from Material + Shape (Plate: L×W×T, Round bar/disc: Dia×Length, Cylindrical shell: Dia×Length×Thk) instead of typing it manually. Scrap and Overhead round up to the nearest rupee, matching the source costing sheet. Data stays in this page only — use Export JSON to save a snapshot and Import JSON to reload it later.
+</footer>
+
+<div id="cloudModal" class="cloud-modal-overlay no-print" style="display:none;">
+  <div class="cloud-modal">
+    <div class="cloud-modal-head">
+      <h3>Saved Estimates</h3>
+      <button type="button" class="icon-btn" id="cloudModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="cloud-modal-body" id="cloudModalBody">
+      <p class="cloud-modal-empty">Loading…</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /appRoot -->
+
+<script type="module">
+  /* ================= Firebase ================= */
+  // Config lives in firebase-init.js (shared by every page) — see SETUP.md.
+  import { auth, db } from './firebase-init.js';
+  import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  import {
+    collection, addDoc, updateDoc, doc, getDoc, getDocs,
+    query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+(function(){
+  "use strict";
+
+  /* ================= Login gate ================= */
+  var currentUser = null;
+  var authReady = false;
+  var initialLoadDone = false;
+
+  function getQueryParam(name){
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  function friendlyAuthError(err){
+    var code = err && err.code;
+    if(code === 'auth/invalid-email') return 'Enter a valid email address.';
+    if(code === 'auth/missing-password') return 'Enter your password.';
+    if(code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/wrong-password'){
+      return 'Incorrect email or password.';
+    }
+    if(code === 'auth/too-many-requests') return 'Too many attempts — try again in a few minutes.';
+    if(code === 'auth/network-request-failed') return 'Network error — check your connection.';
+    return 'Could not sign in. Please try again.';
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('loginUser').value.trim();
+    var pass = document.getElementById('loginPass').value;
+    var errorEl = document.getElementById('loginError');
+    var submitBtn = document.getElementById('loginSubmitBtn');
+    errorEl.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in…';
+    signInWithEmailAndPassword(auth, email, pass).catch(function(err){
+      errorEl.textContent = friendlyAuthError(err);
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+    }).finally(function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign in';
+    });
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', function(){
+    signOut(auth);
+  });
+
+  onAuthStateChanged(auth, function(user){
+    currentUser = user;
+    authReady = true;
+    if(user){
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('appRoot').classList.remove('locked-blur');
+      document.getElementById('loginError').textContent = '';
+      document.getElementById('userEmail').textContent = user.email || '';
+      if(!initialLoadDone){
+        initialLoadDone = true;
+        var qId = getQueryParam('id');
+        if(qId){ loadCloudEstimate(qId); }
+      }
+    } else {
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('appRoot').classList.add('locked-blur');
+      document.getElementById('cloudModal').style.display = 'none';
+    }
+  });
+
+  /* ================= Materials ================= */
+  var MATERIALS = {
+    ms:        { label:'Mild Steel (IS2062)', density:7.85 },
+    ss304:     { label:'SS 304 / 304L',        density:8.00 },
+    ss316:     { label:'SS 316 / 316L',        density:8.00 },
+    duplex:    { label:'Duplex SS 2205',       density:7.80 },
+    hastelloy: { label:'Hastelloy C276',       density:8.89 },
+    aluminium: { label:'Aluminium',            density:2.70 },
+    copper:    { label:'Copper',               density:8.96 },
+    brass:     { label:'Brass',                density:8.40 },
+    titanium:  { label:'Titanium Gr.2',        density:4.51 },
+    pp:        { label:'Polypropylene (PP)',   density:0.905 },
+    ptfe:      { label:'PTFE',                 density:2.20 },
+    custom:    { label:'Custom…',              density:null }
+  };
+  var MATERIAL_KEYS = Object.keys(MATERIALS);
+
+  /* ================= State ================= */
+  var uid = 0;
+  function nextId(){ return 'r' + (uid++); }
+
+  function newItem(section){
+    return {
+      id: nextId(), section:section,
+      part: 'New item', desc: '', weight: 0, qty: 1,
+      basis: 'perUnit', rate: 0,
+      costType: section === 'Labour & Processing' ? 'labour' : 'material',
+      weightMode: 'manual', calc: null
+    };
+  }
+
+  var DEFAULT_SECTIONS = ['Body','Connections','Agitator & Mechanical','Insulation','Labour & Processing'];
+
+  function buildSampleItems(){
+    var rows = [
+      ['Body','Shell','Dia 1500 × Lg 1500 × Thk 8',455,1,'perKg',440,'material'],
+      ['Body','Top End','2:1 Ellipsoidal, Thk 10, Blank Dia 1820',208,1,'perKg',495,'material'],
+      ['Body','Bottom End','2:1 Ellipsoidal, Thk 10, Blank Dia 1820',208,1,'perKg',495,'material'],
+      ['Body','Jacket Shell','Dia 1620 × Lg 1000 × Thk 6',246,0,'perKg',310,'material'],
+      ['Body','Jacket Dish (Tori)','Blank Dia 1882 × Thk 6',133,0,'perKg',350,'material'],
+      ['Body','Shell Limpet Coil','Size 80 NB, Thk 3, Pitch 120',140,1,'perKg',240,'material'],
+      ['Body','Dish Limpet Coil','Size 80 NB, Thk 3, Pitch 120',80,1,'perKg',240,'material'],
+      ['Body','Stiffener','Width 40 × Thk 8, Pitch 150',155,0,'perKg',375,'material'],
+      ['Body','Jacket Closer (Top & Bottom)','Dia 1632 × Width 80 × Thk 8',41,0,'perKg',375,'material'],
+
+      ['Connections','Nozzles (Set)','12/25/40/50/80/100/150/200 NB, 150# SCH-40',0,1,'perUnit',95000,'material'],
+      ['Connections','Manhole (MH)','400 ID',0,1,'perUnit',49500,'material'],
+      ['Connections','Spring Loaded Assy','',0,1,'perUnit',4500,'material'],
+
+      ['Agitator & Mechanical','Shaft','Dia 85 × Lg 3610',164,1,'perKg',410,'material'],
+      ['Agitator & Mechanical','Stirrer (Blade)','Lg 7500 × W 100 × Thk 10',60,1,'perKg',420,'material'],
+      ['Agitator & Mechanical','Stirrer (T-Rib)','Lg 7500 × W 50 × Thk 10',30,1,'perKg',420,'material'],
+      ['Agitator & Mechanical','Bush','OD 135 × Lg 125',15,3,'perKg',420,'material'],
+      ['Agitator & Mechanical','Baffle','Lg 1500 × W 125 × Thk 8',12,4,'perKg',420,'material'],
+      ['Agitator & Mechanical','Baffle Support Plate','Lg 155 × W 125 × Thk 10',2,12,'perKg',420,'material'],
+      ['Agitator & Mechanical','Baffle Support Clit','Lg 155 × W 125 × Thk 10',2,12,'perKg',420,'material'],
+      ['Agitator & Mechanical','Lug Support Pad','Lg 300 × W 300 × Thk 8',6,4,'perKg',280,'material'],
+      ['Agitator & Mechanical','Lug Support','',90,1,'perKg',280,'material'],
+      ['Agitator & Mechanical','Lug Cladding','',0,1,'perUnit',0,'material'],
+      ['Agitator & Mechanical','Assembly','',450,1,'perKg',540,'material'],
+      ['Agitator & Mechanical','Guide Bush','',8,1,'perKg',1250,'material'],
+      ['Agitator & Mechanical','Hardware','',0,1,'perUnit',40000,'material'],
+      ['Agitator & Mechanical','Rigid Coupler','',15,1,'perKg',450,'material'],
+      ['Agitator & Mechanical','Gasket','',0,1,'perUnit',0,'material'],
+      ['Agitator & Mechanical','Gearbox & Motor','5 HP, 48 RPM',0,1,'perUnit',40000,'material'],
+      ['Agitator & Mechanical','Mechanical Seal','',0,1,'perUnit',50000,'material'],
+
+      ['Insulation','Insulation Shell','Dia 1756 × Lg 1200 × Thk 3',159,0,'perKg',210,'material'],
+      ['Insulation','Insulation Dish','Tori (7–10%), Blank Dia 2031.6 × Thk 3',78,0,'perKg',240,'material'],
+      ['Insulation','Insulation Closer (Top & Bottom)','Dia 1762 × W 120 × Thk 3',31,0,'perKg',240,'material'],
+      ['Insulation','Insulation (LRB + PUF)','',0,1,'perUnit',0,'material'],
+      ['Insulation','P&F, Protection Guard, Motor Cover','',0,1,'perUnit',45000,'material'],
+
+      ['Labour & Processing','Assembly Charge','',0,1,'perUnit',15000,'labour'],
+      ['Labour & Processing','Shaft Machining','',0,1,'perUnit',14440,'labour'],
+      ['Labour & Processing','Limpet Labour – Shell','80 NB, per metre',0,43,'perUnit',1100,'labour'],
+      ['Labour & Processing','Limpet Labour – Dish','80 NB, per turn',0,6,'perUnit',4000,'labour'],
+      ['Labour & Processing','RT / UT / NDT','',0,1,'perUnit',15000,'labour'],
+      ['Labour & Processing','Balancing','',0,1,'perUnit',15000,'labour'],
+      ['Labour & Processing','MS Labour','per kg',0,90,'perUnit',65,'labour'],
+      ['Labour & Processing','SS Labour','per kg',0,1441,'perUnit',65,'labour'],
+      ['Labour & Processing','Insulation Dish Bending','',0,1,'perUnit',0,'labour'],
+      ['Labour & Processing','Finishing – Inside (Mirror)','',0,135,'perUnit',165,'labour'],
+      ['Labour & Processing','Finishing – Outside (Matt)','',0,135,'perUnit',135,'labour'],
+      ['Labour & Processing','Finishing – MH + Nozzle','',0,1,'perUnit',2500,'labour']
+    ];
+    return rows.map(function(r){
+      return {
+        id: nextId(), section:r[0], part:r[1], desc:r[2], weight:r[3], qty:r[4], basis:r[5], rate:r[6], costType:r[7],
+        weightMode:'manual', calc:null
+      };
+    });
+  }
+
+  var state = {
+    sections: DEFAULT_SECTIONS.slice(),
+    scrapPct: 3, overheadPct: 15, latePct: 0, profitPct: 15, profitMode: 'markup', units: 1,
+    items: buildSampleItems()
+  };
+
+  /* ================= Helpers ================= */
+  function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function formatCurrency(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[ch];
+    });
+  }
+  function findItem(id){
+    for(var i=0;i<state.items.length;i++){ if(state.items[i].id === id) return state.items[i]; }
+    return null;
+  }
+
+  function calcAmount(item){
+    var qty = num(item.qty), rate = num(item.rate);
+    if(item.basis === 'perKg'){ return num(item.weight) * qty * rate; }
+    return qty * rate;
+  }
+
+  function getDensity(item){
+    if(!item.calc) return 7.85;
+    if(item.calc.material === 'custom') return num(item.calc.customDensity);
+    var m = MATERIALS[item.calc.material];
+    return m ? m.density : 7.85;
+  }
+
+  function computeShapeWeight(item){
+    if(!item.calc) return 0;
+    var c = item.calc, density = getDensity(item), volume = 0;
+    if(c.shape === 'plate'){
+      volume = num(c.L) * num(c.W) * num(c.T);
+    } else if(c.shape === 'round'){
+      volume = (Math.PI/4) * num(c.dia) * num(c.dia) * num(c.length);
+    } else if(c.shape === 'shell'){
+      volume = Math.PI * num(c.dia) * num(c.length) * num(c.thk);
+    }
+    return volume * density / 1000000;
+  }
+
+  /* ================= Render ================= */
+  var container = document.getElementById('lineItemsContainer');
+
+  function rowHTML(item){
+    var weightMode = item.weightMode || 'manual';
+    var isCalc = weightMode === 'calc';
+    return '<tr>' +
+      '<td class="col-part"><input type="text" value="' + escapeHtml(item.part) + '" data-id="' + item.id + '" data-field="part" aria-label="Part name"></td>' +
+      '<td class="col-desc"><input type="text" value="' + escapeHtml(item.desc) + '" data-id="' + item.id + '" data-field="desc" aria-label="Specification"></td>' +
+      '<td class="col-weight"><div class="weight-wrap">' +
+        '<input type="number" step="any" value="' + item.weight + '" data-id="' + item.id + '" data-field="weight" aria-label="Weight kg" ' + (isCalc ? 'readonly' : '') + '>' +
+        '<button type="button" class="calc-toggle ' + (isCalc ? 'active' : '') + '" data-action="toggle-calc" data-id="' + item.id + '" title="' + (isCalc ? 'Auto-calculated — click to enter manually' : 'Calculate weight from material & dimensions') + '">⚙</button>' +
+      '</div></td>' +
+      '<td class="col-num"><input type="number" step="any" value="' + item.qty + '" data-id="' + item.id + '" data-field="qty" aria-label="Quantity"></td>' +
+      '<td class="col-basis">' +
+        '<select data-id="' + item.id + '" data-field="basis" aria-label="Costing basis">' +
+          '<option value="perKg" ' + (item.basis==='perKg'?'selected':'') + '>₹/kg</option>' +
+          '<option value="perUnit" ' + (item.basis==='perUnit'?'selected':'') + '>₹/unit</option>' +
+        '</select>' +
+      '</td>' +
+      '<td class="col-num"><input type="number" step="any" value="' + item.rate + '" data-id="' + item.id + '" data-field="rate" aria-label="Rate"></td>' +
+      '<td class="col-type">' +
+        '<select data-id="' + item.id + '" data-field="costType" aria-label="Cost type">' +
+          '<option value="material" ' + (item.costType==='material'?'selected':'') + '>Material</option>' +
+          '<option value="labour" ' + (item.costType==='labour'?'selected':'') + '>Labour</option>' +
+        '</select>' +
+      '</td>' +
+      '<td class="col-amount mono" data-id="' + item.id + '" data-field="amount">' + formatCurrency(calcAmount(item)) + '</td>' +
+      '<td class="col-del no-print"><button type="button" class="icon-btn" data-action="delete-row" data-id="' + item.id + '" aria-label="Delete row">✕</button></td>' +
+    '</tr>';
+  }
+
+  function materialOptionsHTML(selected){
+    return MATERIAL_KEYS.map(function(k){
+      return '<option value="' + k + '" ' + (selected===k?'selected':'') + '>' + MATERIALS[k].label + '</option>';
+    }).join('');
+  }
+
+  function calcRowHTML(item){
+    if((item.weightMode || 'manual') !== 'calc') return '';
+    var c = item.calc, density = getDensity(item), dimFields = '';
+    if(c.shape === 'plate'){
+      dimFields =
+        '<label>Length (mm)<input type="number" step="any" value="' + c.L + '" data-id="' + item.id + '" data-field="calc-L"></label>' +
+        '<label>Width (mm)<input type="number" step="any" value="' + c.W + '" data-id="' + item.id + '" data-field="calc-W"></label>' +
+        '<label>Thickness (mm)<input type="number" step="any" value="' + c.T + '" data-id="' + item.id + '" data-field="calc-T"></label>';
+    } else if(c.shape === 'round'){
+      dimFields =
+        '<label>Diameter (mm)<input type="number" step="any" value="' + c.dia + '" data-id="' + item.id + '" data-field="calc-dia"></label>' +
+        '<label>Length / Thickness (mm)<input type="number" step="any" value="' + c.length + '" data-id="' + item.id + '" data-field="calc-length"></label>';
+    } else if(c.shape === 'shell'){
+      dimFields =
+        '<label>Diameter (mm)<input type="number" step="any" value="' + c.dia + '" data-id="' + item.id + '" data-field="calc-dia"></label>' +
+        '<label>Length (mm)<input type="number" step="any" value="' + c.length + '" data-id="' + item.id + '" data-field="calc-length"></label>' +
+        '<label>Thickness (mm)<input type="number" step="any" value="' + c.thk + '" data-id="' + item.id + '" data-field="calc-thk"></label>';
+    }
+    var densityField = c.material === 'custom'
+      ? '<label>Density (g/cm³)<input type="number" step="any" value="' + c.customDensity + '" data-id="' + item.id + '" data-field="calc-density"></label>'
+      : '<span class="calc-density-hint">Density: ' + density + ' g/cm³</span>';
+    return '<tr class="calc-row"><td colspan="8">' +
+      '<div class="calc-panel">' +
+        '<div class="calc-panel-row">' +
+          '<label>Material<select data-id="' + item.id + '" data-field="calc-material">' + materialOptionsHTML(c.material) + '</select></label>' +
+          densityField +
+          '<label>Shape<select data-id="' + item.id + '" data-field="calc-shape">' +
+            '<option value="plate" ' + (c.shape==='plate'?'selected':'') + '>Plate (L × W × T)</option>' +
+            '<option value="round" ' + (c.shape==='round'?'selected':'') + '>Round Bar / Disc (Dia × Length)</option>' +
+            '<option value="shell" ' + (c.shape==='shell'?'selected':'') + '>Cylindrical Shell (Dia × Length × Thk)</option>' +
+          '</select></label>' +
+        '</div>' +
+        '<div class="calc-panel-row">' +
+          dimFields +
+          '<span class="calc-result" data-calc-result="' + item.id + '">= <strong>' + computeShapeWeight(item).toFixed(2) + ' kg</strong></span>' +
+          '<button type="button" class="chip no-print" data-action="calc-manual" data-id="' + item.id + '">Enter weight manually instead</button>' +
+        '</div>' +
+      '</div>' +
+    '</td></tr>';
+  }
+
+  function sectionSubtotal(section){
+    return state.items.filter(function(i){ return i.section === section; }).reduce(function(s,i){ return s + calcAmount(i); }, 0);
+  }
+
+  function sectionHTML(section){
+    var rows = state.items.filter(function(i){ return i.section === section; });
+    var bodyHtml = rows.map(function(item){ return rowHTML(item) + calcRowHTML(item); }).join('');
+    return '<div class="section-block" data-section-block="' + escapeHtml(section) + '">' +
+      '<div class="section-header"><h3>' + escapeHtml(section) + '</h3>' +
+        '<span class="section-subtotal mono" data-section-subtotal="' + escapeHtml(section) + '">' + formatCurrency(sectionSubtotal(section)) + '</span>' +
+      '</div>' +
+      '<div class="table-scroll"><table class="items-table">' +
+        '<thead><tr><th>Part</th><th>Spec / Description</th><th>Weight (kg)</th><th>Qty</th><th>Basis</th><th>Rate ₹</th><th>Type</th><th>Amount ₹</th><th class="no-print"></th></tr></thead>' +
+        '<tbody>' + bodyHtml + '</tbody>' +
+      '</table></div>' +
+      '<button type="button" class="add-row-btn no-print" data-action="add-row" data-section="' + escapeHtml(section) + '">+ Add line item to ' + escapeHtml(section) + '</button>' +
+    '</div>';
+  }
+
+  function render(){
+    container.innerHTML = state.sections.map(sectionHTML).join('');
+    updateSummary();
+  }
+
+  function updateRowDOM(item){
+    var cell = container.querySelector('td.col-amount[data-id="' + item.id + '"]');
+    if(cell) cell.textContent = formatCurrency(calcAmount(item));
+    var subtotalEl = container.querySelector('[data-section-subtotal="' + CSS.escape(item.section) + '"]');
+    if(subtotalEl) subtotalEl.textContent = formatCurrency(sectionSubtotal(item.section));
+  }
+
+  function updateCalcResultDOM(item){
+    var span = container.querySelector('[data-calc-result="' + item.id + '"]');
+    if(span) span.innerHTML = '= <strong>' + computeShapeWeight(item).toFixed(2) + ' kg</strong>';
+    var weightInput = container.querySelector('input[data-field="weight"][data-id="' + item.id + '"]');
+    if(weightInput) weightInput.value = item.weight;
+  }
+
+  /* ================= Summary calculation ================= */
+  function updateSummary(){
+    var materialItems = state.items.filter(function(i){ return i.costType === 'material'; });
+    var labourItems = state.items.filter(function(i){ return i.costType === 'labour'; });
+
+    var rmc = materialItems.reduce(function(s,i){ return s + calcAmount(i); }, 0);
+    var labour = labourItems.reduce(function(s,i){ return s + calcAmount(i); }, 0);
+    var totalWeight = state.items.filter(function(i){ return i.basis === 'perKg'; })
+      .reduce(function(s,i){ return s + num(i.weight)*num(i.qty); }, 0);
+
+    var scrapAmt = Math.ceil(rmc * state.scrapPct / 100);
+    var overheadAmt = Math.ceil((rmc + scrapAmt + labour) * state.overheadPct / 100);
+    var baseCost = rmc + scrapAmt + labour + overheadAmt;
+
+    var lateAmt = Math.round(baseCost * state.latePct / 100);
+    var costAfterLate = baseCost + lateAmt;
+
+    var profitAmt, finalPrice;
+    if(state.profitMode === 'margin'){
+      var denom = 1 - (state.profitPct / 100);
+      finalPrice = denom > 0 ? costAfterLate / denom : costAfterLate;
+      profitAmt = finalPrice - costAfterLate;
+    } else {
+      profitAmt = costAfterLate * state.profitPct / 100;
+      finalPrice = costAfterLate + profitAmt;
+    }
+    var effMargin = finalPrice > 0 ? (profitAmt / finalPrice) * 100 : 0;
+    var orderValue = finalPrice * (num(state.units) || 1);
+
+    document.getElementById('sumWeight').textContent = Math.round(totalWeight).toLocaleString('en-IN') + ' kg';
+    document.getElementById('sumRMC').textContent = formatCurrency(rmc);
+    document.getElementById('sumScrap').textContent = formatCurrency(scrapAmt);
+    document.getElementById('sumLabour').textContent = formatCurrency(labour);
+    document.getElementById('sumOverhead').textContent = formatCurrency(overheadAmt);
+    document.getElementById('sumBase').textContent = formatCurrency(baseCost);
+    document.getElementById('sumLate').textContent = formatCurrency(lateAmt);
+    document.getElementById('sumCostAfterLate').textContent = formatCurrency(costAfterLate);
+    document.getElementById('sumProfit').textContent = formatCurrency(profitAmt);
+    document.getElementById('sumEffMargin').textContent = effMargin.toFixed(1) + '%';
+    document.getElementById('sumFinal').textContent = formatCurrency(finalPrice);
+    document.getElementById('sumOrderValue').textContent = formatCurrency(orderValue);
+  }
+
+  /* ================= Events: line item table (delegated) ================= */
+  container.addEventListener('input', function(e){
+    var t = e.target;
+    if(!t.dataset || !t.dataset.id) return;
+    var item = findItem(t.dataset.id);
+    if(!item) return;
+    var field = t.dataset.field;
+
+    if(field && field.indexOf('calc-') === 0){
+      var key = field.slice(5);
+      if(!item.calc) return;
+      if(key === 'density'){ item.calc.customDensity = num(t.value); }
+      else { item.calc[key] = t.value === '' ? '' : num(t.value); }
+      item.weight = +computeShapeWeight(item).toFixed(2);
+      updateCalcResultDOM(item);
+      updateRowDOM(item);
+      updateSummary();
+      return;
+    }
+
+    if(field === 'part' || field === 'desc'){
+      item[field] = t.value;
+      return;
+    }
+    if(field === 'weight' || field === 'qty' || field === 'rate'){
+      item[field] = t.value === '' ? '' : num(t.value);
+      updateRowDOM(item);
+      updateSummary();
+    }
+  });
+
+  container.addEventListener('change', function(e){
+    var t = e.target;
+    if(t.tagName !== 'SELECT' || !t.dataset.id) return;
+    var item = findItem(t.dataset.id);
+    if(!item) return;
+    var field = t.dataset.field;
+
+    if(field === 'calc-material' || field === 'calc-shape'){
+      if(!item.calc) return;
+      item.calc[field === 'calc-material' ? 'material' : 'shape'] = t.value;
+      item.weight = +computeShapeWeight(item).toFixed(2);
+      render();
+      return;
+    }
+
+    item[field] = t.value;
+    if(field === 'basis'){
+      var tr = t.closest('tr');
+      var weightInput = tr.querySelector('input[data-field="weight"]');
+      if(weightInput) weightInput.disabled = false;
+    }
+    updateRowDOM(item);
+    updateSummary();
+  });
+
+  container.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    var action = btn.dataset.action;
+    if(action === 'delete-row'){
+      state.items = state.items.filter(function(i){ return i.id !== btn.dataset.id; });
+      render();
+    } else if(action === 'add-row'){
+      state.items.push(newItem(btn.dataset.section));
+      render();
+    } else if(action === 'toggle-calc'){
+      var item = findItem(btn.dataset.id);
+      if(!item) return;
+      if((item.weightMode || 'manual') === 'calc'){
+        item.weightMode = 'manual';
+      } else {
+        item.weightMode = 'calc';
+        if(!item.calc){
+          item.calc = { shape:'plate', material:'ms', customDensity:7.85, L:0, W:0, T:0, dia:0, length:0, thk:0 };
+        }
+        item.weight = +computeShapeWeight(item).toFixed(2);
+      }
+      render();
+    } else if(action === 'calc-manual'){
+      var item2 = findItem(btn.dataset.id);
+      if(!item2) return;
+      item2.weightMode = 'manual';
+      render();
+    }
+  });
+
+  /* ================= Toolbar ================= */
+  document.querySelectorAll('.toolbar [data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var action = btn.dataset.action;
+      if(action === 'cloud-save'){
+        cloudSave(btn);
+      } else if(action === 'cloud-open'){
+        openCloudList();
+      } else if(action === 'new-estimate'){
+        if(window.confirm('Start a new blank estimate? Anything not already saved to the cloud will be lost.')){
+          startNewEstimate();
+        }
+      } else if(action === 'add-section'){
+        var name = window.prompt('Name of new section:');
+        if(name && state.sections.indexOf(name) === -1){
+          state.sections.push(name);
+          render();
+        }
+      } else if(action === 'export-json'){
+        exportJSON();
+      } else if(action === 'import-json'){
+        document.getElementById('importFile').click();
+      } else if(action === 'export-csv'){
+        exportCSV();
+      } else if(action === 'print'){
+        window.print();
+      } else if(action === 'clear-all'){
+        if(window.confirm('Remove all line items from every section? This cannot be undone.')){
+          state.items = [];
+          render();
+        }
+      }
+    });
+  });
+  document.querySelectorAll('.add-section-row [data-action="add-section"]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var name = window.prompt('Name of new section:');
+      if(name && state.sections.indexOf(name) === -1){
+        state.sections.push(name);
+        render();
+      }
+    });
+  });
+
+  /* ================= Cloud save / open (Firestore) ================= */
+  var currentDocId = null;
+  var isSaving = false;
+
+  function estimatePayload(){
+    return {
+      type: 'vessel-agitator',
+      meta: readMeta(),
+      settings: {
+        scrapPct: state.scrapPct, overheadPct: state.overheadPct, latePct: state.latePct,
+        profitPct: state.profitPct, profitMode: state.profitMode, units: state.units
+      },
+      sections: state.sections,
+      items: state.items
+    };
+  }
+
+  function cloudSave(btn){
+    if(isSaving) return;
+    if(!currentUser){ window.alert('You must be signed in to save.'); return; }
+    isSaving = true;
+    var originalText = btn ? btn.textContent : '';
+    if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    var payload = estimatePayload();
+    payload.updatedAt = serverTimestamp();
+    payload.updatedBy = currentUser.email;
+
+    var task;
+    if(currentDocId){
+      task = updateDoc(doc(db, 'estimates', currentDocId), payload);
+    } else {
+      payload.createdAt = serverTimestamp();
+      payload.createdBy = currentUser.email;
+      task = addDoc(collection(db, 'estimates'), payload).then(function(ref){
+        currentDocId = ref.id;
+      });
+    }
+
+    task.then(function(){
+      if(btn){ btn.textContent = '✓ Saved'; }
+    }).catch(function(err){
+      window.alert('Could not save to cloud: ' + (err && err.message ? err.message : err));
+    }).finally(function(){
+      isSaving = false;
+      setTimeout(function(){
+        if(btn){ btn.disabled = false; btn.textContent = originalText; }
+      }, 1400);
+    });
+  }
+
+  function openCloudList(){
+    if(!currentUser){ window.alert('You must be signed in to view saved estimates.'); return; }
+    var modal = document.getElementById('cloudModal');
+    var body = document.getElementById('cloudModalBody');
+    modal.style.display = 'flex';
+    body.innerHTML = '<p class="cloud-modal-empty">Loading…</p>';
+
+    var q = query(collection(db, 'estimates'), orderBy('updatedAt', 'desc'));
+    getDocs(q).then(function(snap){
+      if(snap.empty){
+        body.innerHTML = '<p class="cloud-modal-empty">No saved estimates yet — use "Save to Cloud" to create the first one.</p>';
+        return;
+      }
+      var rows = [];
+      snap.forEach(function(docSnap){
+        var d = docSnap.data();
+        var m = d.meta || {};
+        var updated = (d.updatedAt && d.updatedAt.toDate) ? d.updatedAt.toDate().toLocaleString('en-IN') : '—';
+        rows.push(
+          '<button type="button" class="cloud-item" data-doc-id="' + docSnap.id + '">' +
+            '<span class="cloud-item-title">' + escapeHtml(m.equipment || 'Untitled estimate') + '</span>' +
+            '<span class="cloud-item-sub">' + escapeHtml(m.client || 'No client') + ' · Rev ' + escapeHtml(m.rev || 'R00') + ' · ' + updated + '</span>' +
+          '</button>'
+        );
+      });
+      body.innerHTML = rows.join('');
+      body.querySelectorAll('.cloud-item').forEach(function(itemBtn){
+        itemBtn.addEventListener('click', function(){
+          loadCloudEstimate(itemBtn.dataset.docId);
+        });
+      });
+    }).catch(function(err){
+      body.innerHTML = '<p class="cloud-modal-empty">Could not load saved estimates: ' + escapeHtml(err.message || String(err)) + '</p>';
+    });
+  }
+
+  function loadCloudEstimate(id){
+    getDoc(doc(db, 'estimates', id)).then(function(snap){
+      if(!snap.exists()){ window.alert('That estimate no longer exists.'); return; }
+      var d = snap.data();
+      currentDocId = id;
+      if(d.sections) state.sections = d.sections;
+      if(d.items) state.items = d.items.map(function(i){
+        return Object.assign({}, i, { id: i.id || nextId(), weightMode: i.weightMode || 'manual' });
+      });
+      if(d.settings) Object.assign(state, d.settings);
+      if(d.meta) writeMeta(d.meta);
+      populateSettingInputs();
+      render();
+      document.getElementById('cloudModal').style.display = 'none';
+    }).catch(function(err){
+      window.alert('Could not open that estimate: ' + (err && err.message ? err.message : err));
+    });
+  }
+
+  function startNewEstimate(){
+    currentDocId = null;
+    state.sections = DEFAULT_SECTIONS.slice();
+    state.items = buildSampleItems();
+    state.scrapPct = 3; state.overheadPct = 15; state.latePct = 0;
+    state.profitPct = 15; state.profitMode = 'markup'; state.units = 1;
+    writeMeta({
+      client: '', equipment: '3 KL Reactor', quotNo: '',
+      date: new Date().toISOString().slice(0, 10), rev: 'R00'
+    });
+    populateSettingInputs();
+    render();
+  }
+
+  document.getElementById('cloudModalClose').addEventListener('click', function(){
+    document.getElementById('cloudModal').style.display = 'none';
+  });
+  document.getElementById('cloudModal').addEventListener('click', function(e){
+    if(e.target.id === 'cloudModal'){ e.target.style.display = 'none'; }
+  });
+
+  function downloadBlob(content, filename, type){
+    var blob = new Blob([content], { type: type });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportJSON(){
+    var payload = {
+      meta: readMeta(),
+      settings: {
+        scrapPct: state.scrapPct, overheadPct: state.overheadPct, latePct: state.latePct,
+        profitPct: state.profitPct, profitMode: state.profitMode, units: state.units
+      },
+      sections: state.sections, items: state.items
+    };
+    downloadBlob(JSON.stringify(payload, null, 2), 'cost-estimate.json', 'application/json');
+  }
+
+  function exportCSV(){
+    var header = ['Section','Part','Description','Weight (kg)','Qty','Basis','Rate','Cost Type','Amount'];
+    var lines = [header.join(',')];
+    state.items.forEach(function(i){
+      var row = [i.section, i.part, i.desc, i.weight, i.qty, i.basis, i.rate, i.costType, Math.round(calcAmount(i))];
+      lines.push(row.map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(','));
+    });
+    downloadBlob(lines.join('\n'), 'cost-estimate.csv', 'text/csv');
+  }
+
+  document.getElementById('importFile').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if(data.sections) state.sections = data.sections;
+        if(data.items) state.items = data.items.map(function(i){
+          return Object.assign({}, i, { id: i.id || nextId(), weightMode: i.weightMode || 'manual' });
+        });
+        if(data.settings) Object.assign(state, data.settings);
+        if(data.meta) writeMeta(data.meta);
+        populateSettingInputs();
+        render();
+      } catch(err){
+        window.alert('Could not read that file — please choose a JSON export from this tool.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  /* ================= Settings inputs ================= */
+  function bindPct(id, field){
+    document.getElementById(id).addEventListener('input', function(e){
+      state[field] = num(e.target.value);
+      updateSummary();
+    });
+  }
+  bindPct('scrapPct','scrapPct');
+  bindPct('overheadPct','overheadPct');
+  bindPct('latePct','latePct');
+  bindPct('profitPct','profitPct');
+
+  document.getElementById('unitsInput').addEventListener('input', function(e){
+    state.units = num(e.target.value) || 1;
+    updateSummary();
+  });
+
+  document.getElementById('latePresets').addEventListener('click', function(e){
+    var chip = e.target.closest('.chip');
+    if(!chip) return;
+    var pct = num(chip.dataset.pct);
+    state.latePct = pct;
+    document.getElementById('latePct').value = pct;
+    updateSummary();
+  });
+
+  document.querySelectorAll('.mode-toggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.mode-toggle button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.profitMode = btn.dataset.mode;
+      document.getElementById('profitLabel').textContent =
+        state.profitMode === 'margin' ? 'Profit margin (on final price)' : 'Profit margin (markup on cost)';
+      updateSummary();
+    });
+  });
+
+  function populateSettingInputs(){
+    document.getElementById('scrapPct').value = state.scrapPct;
+    document.getElementById('overheadPct').value = state.overheadPct;
+    document.getElementById('latePct').value = state.latePct;
+    document.getElementById('profitPct').value = state.profitPct;
+    document.getElementById('unitsInput').value = state.units;
+    document.querySelectorAll('.mode-toggle button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.mode === state.profitMode);
+    });
+    document.getElementById('profitLabel').textContent =
+      state.profitMode === 'margin' ? 'Profit margin (on final price)' : 'Profit margin (markup on cost)';
+  }
+
+  /* ================= Meta (title block) fields ================= */
+  function readMeta(){
+    return {
+      company: document.getElementById('mCompany').value,
+      client: document.getElementById('mClient').value,
+      equipment: document.getElementById('mEquipment').value,
+      quotNo: document.getElementById('mQuotNo').value,
+      date: document.getElementById('mDate').value,
+      rev: document.getElementById('revLabel').textContent
+    };
+  }
+  function writeMeta(meta){
+    if(meta.company != null) document.getElementById('mCompany').value = meta.company;
+    if(meta.client != null) document.getElementById('mClient').value = meta.client;
+    if(meta.equipment != null){
+      document.getElementById('mEquipment').value = meta.equipment;
+      document.getElementById('pageHeading').textContent = meta.equipment || 'Reactor & Vessel Costing';
+    }
+    if(meta.quotNo != null) document.getElementById('mQuotNo').value = meta.quotNo;
+    if(meta.date != null) document.getElementById('mDate').value = meta.date;
+    if(meta.rev != null) document.getElementById('revLabel').textContent = meta.rev;
+  }
+  document.getElementById('mEquipment').addEventListener('input', function(e){
+    document.getElementById('pageHeading').textContent = e.target.value || 'Reactor & Vessel Costing';
+  });
+
+  /* ================= Init ================= */
+  render();
+})();
+</script>
+</body>
+</html>

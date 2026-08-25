@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bharat Industries — Cost Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+  /* ---------- Page-specific: dashboard cards ---------- */
+  .dash-wrap{
+    max-width:1100px; margin:0 auto; padding:34px clamp(16px,3vw,40px) 60px;
+  }
+  .dash-intro{ color:var(--ink-soft); font-size:13.5px; margin:0 0 22px; max-width:640px; }
+  .dash-section-title{
+    font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--teal);
+    font-weight:700; margin:0 0 12px;
+  }
+  .calc-cards{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px; margin-bottom:38px;
+  }
+  .calc-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:22px 20px; display:flex; flex-direction:column; gap:10px;
+    transition:border-color .15s, transform .15s;
+  }
+  a.calc-card{ cursor:pointer; }
+  a.calc-card:hover{ border-color:var(--teal); transform:translateY(-2px); }
+  .calc-card-icon{
+    width:42px; height:42px; border-radius:9px; background:var(--navy); color:var(--teal-2);
+    display:flex; align-items:center; justify-content:center; font-size:19px; font-family:'IBM Plex Mono',monospace;
+  }
+  .calc-card.disabled .calc-card-icon{ background:#e4e9ea; color:#a9b4b8; }
+  .calc-card-title{ font-size:15px; font-weight:700; color:var(--ink); }
+  .calc-card-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; flex:1; }
+  .calc-card-cta{
+    font-size:12px; font-weight:600; color:var(--teal); display:flex; align-items:center; gap:5px;
+  }
+  .calc-card.disabled{ opacity:.72; }
+  .calc-card.disabled .calc-card-cta{ color:var(--ink-soft); }
+  .badge-soon{
+    align-self:flex-start; font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
+    background:#eef2f1; color:var(--ink-soft); padding:3px 8px; border-radius:999px; font-weight:700;
+  }
+
+  .recent-list{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .recent-empty, .recent-loading{ color:var(--ink-soft); font-size:13px; padding:24px 18px; text-align:center; }
+  .recent-item{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left;
+    border:none; border-bottom:1px solid #eef1f2; background:transparent; cursor:pointer; padding:13px 18px;
+  }
+  .recent-item:last-child{ border-bottom:none; }
+  .recent-item:hover{ background:#f2fbfa; }
+  .recent-item-main{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .recent-item-title{ font-size:13.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recent-item-sub{ font-size:11.5px; color:var(--ink-soft); }
+  .recent-item-updated{ font-size:11.5px; color:var(--ink-soft); white-space:nowrap; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo" aria-hidden="true">LOGO</div>
+    <div class="login-brand">Bharat Industries</div>
+    <div class="login-sub">Cost Estimator — Sign in</div>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <label for="loginUser">Email</label>
+        <input type="email" id="loginUser" autocomplete="username" autofocus />
+      </div>
+      <div class="login-field">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" />
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn" id="loginSubmitBtn">Sign in</button>
+    </form>
+    <div class="login-note">Accounts are created by an admin in the Firebase console — there is no public sign-up. Contact your admin if you need access.</div>
+  </div>
+</div>
+
+<div id="appRoot" class="locked-blur">
+
+<div class="titleblock">
+  <div class="titleblock-top">
+    <div class="brand-block">
+      <div class="logo-placeholder" aria-hidden="true">LOGO</div>
+      <div>
+        <div class="brand-name">Bharat Industries</div>
+        <div class="titleblock-eyebrow">Cost Estimation Tool</div>
+        <h1>Dashboard</h1>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="user-badge no-print" id="userBadge">
+        <span class="user-badge-email" id="userEmail"></span>
+        <button type="button" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dash-wrap">
+  <p class="dash-intro">Choose an estimation type to start a new costing, or pick up a saved estimate below.</p>
+
+  <div class="dash-section-title">Estimation type</div>
+  <div class="calc-cards">
+    <a class="calc-card" href="vessel-agitator.html">
+      <div class="calc-card-icon">V</div>
+      <div class="calc-card-title">Vessel + Agitator</div>
+      <div class="calc-card-desc">Reactor/vessel shell, jacket, agitator &amp; mechanical parts, insulation and labour — full RMC-to-quotation costing.</div>
+      <div class="calc-card-cta">Open estimator →</div>
+    </a>
+    <div class="calc-card disabled">
+      <span class="badge-soon">In progress</span>
+      <div class="calc-card-icon">H</div>
+      <div class="calc-card-title">Heat Exchanger</div>
+      <div class="calc-card-desc">Shell, tubes, tube sheets, baffles &amp; channel costing. Being built next.</div>
+      <div class="calc-card-cta">Coming soon</div>
+    </div>
+    <div class="calc-card disabled">
+      <span class="badge-soon">In progress</span>
+      <div class="calc-card-icon">O</div>
+      <div class="calc-card-title">Others</div>
+      <div class="calc-card-desc">Flexible, freeform costing sheet for equipment outside the standard types.</div>
+      <div class="calc-card-cta">Coming soon</div>
+    </div>
+  </div>
+
+  <div class="dash-section-title">Recent estimates</div>
+  <div class="recent-list" id="recentList">
+    <p class="recent-loading">Loading…</p>
+  </div>
+</div>
+
+</div><!-- /appRoot -->
+
+<script type="module">
+  import { auth, db } from './firebase-init.js';
+  import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch){
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[ch];
+    });
+  }
+
+  var TYPE_LABELS = { 'vessel-agitator':'Vessel + Agitator', 'heat-exchanger':'Heat Exchanger', 'other':'Others' };
+  var TYPE_PAGES = { 'vessel-agitator':'vessel-agitator.html', 'heat-exchanger':'heat-exchanger.html', 'other':'others.html' };
+
+  function friendlyAuthError(err){
+    var code = err && err.code;
+    if(code === 'auth/invalid-email') return 'Enter a valid email address.';
+    if(code === 'auth/missing-password') return 'Enter your password.';
+    if(code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/wrong-password'){
+      return 'Incorrect email or password.';
+    }
+    if(code === 'auth/too-many-requests') return 'Too many attempts — try again in a few minutes.';
+    if(code === 'auth/network-request-failed') return 'Network error — check your connection.';
+    return 'Could not sign in. Please try again.';
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('loginUser').value.trim();
+    var pass = document.getElementById('loginPass').value;
+    var errorEl = document.getElementById('loginError');
+    var submitBtn = document.getElementById('loginSubmitBtn');
+    errorEl.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in…';
+    signInWithEmailAndPassword(auth, email, pass).catch(function(err){
+      errorEl.textContent = friendlyAuthError(err);
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+    }).finally(function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign in';
+    });
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', function(){
+    signOut(auth);
+  });
+
+  function loadRecent(){
+    var list = document.getElementById('recentList');
+    list.innerHTML = '<p class="recent-loading">Loading…</p>';
+    var q = query(collection(db, 'estimates'), orderBy('updatedAt', 'desc'), limit(15));
+    getDocs(q).then(function(snap){
+      if(snap.empty){
+        list.innerHTML = '<p class="recent-empty">No saved estimates yet — open a calculator above and use "Save to Cloud".</p>';
+        return;
+      }
+      var rows = [];
+      snap.forEach(function(docSnap){
+        var d = docSnap.data();
+        var m = d.meta || {};
+        var type = d.type || 'vessel-agitator';
+        var page = TYPE_PAGES[type] || TYPE_PAGES['vessel-agitator'];
+        var typeLabel = TYPE_LABELS[type] || type;
+        var updated = (d.updatedAt && d.updatedAt.toDate) ? d.updatedAt.toDate().toLocaleString('en-IN') : '—';
+        rows.push(
+          '<button type="button" class="recent-item" data-page="' + page + '" data-doc-id="' + docSnap.id + '">' +
+            '<span class="recent-item-main">' +
+              '<span class="recent-item-title">' + escapeHtml(m.equipment || 'Untitled estimate') + '</span>' +
+              '<span class="recent-item-sub"><span class="cloud-item-type">' + escapeHtml(typeLabel) + '</span>' + escapeHtml(m.client || 'No client') + ' · Rev ' + escapeHtml(m.rev || 'R00') + '</span>' +
+            '</span>' +
+            '<span class="recent-item-updated">' + updated + '</span>' +
+          '</button>'
+        );
+      });
+      list.innerHTML = rows.join('');
+      list.querySelectorAll('.recent-item').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          window.location.href = btn.dataset.page + '?id=' + encodeURIComponent(btn.dataset.docId);
+        });
+      });
+    }).catch(function(err){
+      list.innerHTML = '<p class="recent-empty">Could not load saved estimates: ' + escapeHtml(err.message || String(err)) + '</p>';
+    });
+  }
+
+  onAuthStateChanged(auth, function(user){
+    if(user){
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('appRoot').classList.remove('locked-blur');
+      document.getElementById('loginError').textContent = '';
+      document.getElementById('userEmail').textContent = user.email || '';
+      loadRecent();
+    } else {
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('appRoot').classList.add('locked-blur');
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Paste this into: Firebase console > Build > Firestore Database > Rules tab > Publish
+//
+// Any signed-in user (i.e. anyone you've added under Authentication > Users)
+// can read and write every estimate. That matches an internal shared tool —
+// everyone on the team can see and edit everyone else's estimates. If you
+// later want to restrict editing to the estimate's own author, or add an
+// admin-only role, that logic goes here.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /estimates/{estimateId} {
+      allow read, write: if request.auth != null;
+    }
+
+  }
+}
