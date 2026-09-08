@@ -10,6 +10,27 @@
 <link rel="stylesheet" href="theme.css">
 <style>
   /* ---------- Page-specific: item tables, weight calc, cost summary ---------- */
+
+  .tech-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; padding:16px 18px;
+  }
+  @media (max-width:600px){ .tech-grid{ grid-template-columns:1fr; } }
+  .tech-field label{
+    display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--ink-soft); margin-bottom:5px; font-weight:600;
+  }
+  .tech-field-unit{ display:flex; align-items:center; gap:8px; }
+  .tech-field-unit input{
+    flex:1; min-width:0; border:1px solid var(--border); border-radius:7px; padding:7px 9px;
+    font-size:13px; font-family:'IBM Plex Mono',monospace;
+  }
+  .tech-field-unit span{ font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+  .tech-field select{
+    width:100%; border:1px solid var(--border); border-radius:7px; padding:7px 9px; font-size:13px; background:#fff;
+  }
+  .tech-field input[type="text"]{
+    width:100%; border:1px solid var(--border); border-radius:7px; padding:7px 9px; font-size:13px;
+  }
 .table-scroll{ overflow-x:auto; }
   table.items-table{ width:100%; border-collapse:collapse; min-width:840px; }
   .items-table thead th{
@@ -174,7 +195,7 @@
       <div>
         <div class="brand-name">Bharat Industries</div>
         <div class="titleblock-eyebrow">Cost Estimation Worksheet</div>
-        <h1 id="pageHeading">3 KL Reactor</h1>
+        <h1 id="pageHeading">New Estimate</h1>
       </div>
     </div>
     <div class="tb-right">
@@ -197,7 +218,7 @@
     </div>
     <div class="tb-field">
       <label for="mEquipment">Equipment</label>
-      <input id="mEquipment" type="text" value="3 KL Reactor" />
+      <input id="mEquipment" type="text" placeholder="e.g. 3 KL Reactor" />
     </div>
     <div class="tb-field">
       <label for="mQuotNo">Quotation #</label>
@@ -205,7 +226,7 @@
     </div>
     <div class="tb-field">
       <label for="mDate">Date</label>
-      <input id="mDate" type="date" value="2026-08-01" />
+      <input id="mDate" type="date" />
     </div>
   </div>
 </div>
@@ -217,6 +238,7 @@
   <main>
     <div class="toolbar no-print">
       <button class="btn btn-primary" data-action="cloud-save" type="button">☁ Save to Cloud</button>
+      <button class="btn" data-action="new-revision" type="button">🔁 Save as New Revision</button>
       <button class="btn" data-action="cloud-open" type="button">📂 Open Saved</button>
       <button class="btn btn-ghost" data-action="new-estimate" type="button">＋ New Estimate</button>
       <button class="btn btn-ghost" data-action="add-section" type="button">+ Add section</button>
@@ -226,6 +248,80 @@
       <button class="btn" data-action="export-csv" type="button">Export CSV</button>
       <button class="btn btn-primary" data-action="print" type="button">Print / Save PDF</button>
       <button class="btn btn-danger" data-action="clear-all" type="button" style="margin-left:auto;">Clear all items</button>
+    </div>
+
+    <div class="section-block" id="vesselTechCard">
+      <div class="section-header"><h3>Vessel Technical Details</h3></div>
+      <div class="tech-grid">
+        <div class="tech-field">
+          <label for="vTotalCap">Total Capacity</label>
+          <div class="tech-field-unit"><input type="number" id="vTotalCap" step="1" /><span>Litres</span></div>
+        </div>
+        <div class="tech-field">
+          <label for="vOpCap">Operating Capacity</label>
+          <div class="tech-field-unit"><input type="number" id="vOpCap" step="1" /><span>Litres</span></div>
+        </div>
+
+        <div class="tech-field">
+          <label for="vDesPresVessel">Design Pressure — Vessel</label>
+          <div class="tech-field-unit"><input type="number" id="vDesPresVessel" step="0.1" /><span>kg/cm²g</span></div>
+        </div>
+        <div class="tech-field">
+          <label for="vDesPresLimpet">Design Pressure — Limpet</label>
+          <div class="tech-field-unit"><input type="number" id="vDesPresLimpet" step="0.1" /><span>kg/cm²g</span></div>
+        </div>
+
+        <div class="tech-field">
+          <label for="vDesTempVessel">Design Temperature — Vessel</label>
+          <div class="tech-field-unit"><input type="number" id="vDesTempVessel" step="1" /><span>°C</span></div>
+        </div>
+        <div class="tech-field">
+          <label for="vDesTempLimpet">Design Temperature — Limpet</label>
+          <div class="tech-field-unit"><input type="number" id="vDesTempLimpet" step="1" /><span>°C</span></div>
+        </div>
+
+        <div class="tech-field">
+          <label for="vHydroPresVessel">Hydrotest Pressure — Vessel</label>
+          <div class="tech-field-unit"><input type="number" id="vHydroPresVessel" step="0.1" /><span>kg/cm²g</span></div>
+        </div>
+        <div class="tech-field">
+          <label for="vHydroPresLimpet">Hydrotest Pressure — Limpet</label>
+          <div class="tech-field-unit"><input type="number" id="vHydroPresLimpet" step="0.1" /><span>kg/cm²g</span></div>
+        </div>
+
+        <div class="tech-field">
+          <label for="vMocVessel">MOC — Vessel</label>
+          <select id="vMocVessel">
+            <option value="">— Select —</option>
+            <option>SS 304</option><option>SS 304L</option>
+            <option>SS 316</option><option>SS 316L</option>
+            <option>Carbon Steel (IS 2062)</option>
+            <option>MS (IS 2062)</option>
+            <option>Duplex SS 2205</option>
+            <option>Hastelloy C276</option>
+            <option>Monel 400</option>
+            <option>Titanium Gr.2</option>
+            <option value="__other__">Other (specify)</option>
+          </select>
+          <input type="text" id="vMocVesselOther" placeholder="Specify material" style="display:none;margin-top:6px;" />
+        </div>
+        <div class="tech-field">
+          <label for="vMocLimpet">MOC — Limpet</label>
+          <select id="vMocLimpet">
+            <option value="">— Select —</option>
+            <option>SS 304</option><option>SS 304L</option>
+            <option>SS 316</option><option>SS 316L</option>
+            <option>Carbon Steel (IS 2062)</option>
+            <option>MS (IS 2062)</option>
+            <option>Duplex SS 2205</option>
+            <option>Hastelloy C276</option>
+            <option>Monel 400</option>
+            <option>Titanium Gr.2</option>
+            <option value="__other__">Other (specify)</option>
+          </select>
+          <input type="text" id="vMocLimpetOther" placeholder="Specify material" style="display:none;margin-top:6px;" />
+        </div>
+      </div>
     </div>
 
     <div id="lineItemsContainer"></div>
@@ -431,71 +527,10 @@
 
   var DEFAULT_SECTIONS = ['Body','Connections','Agitator & Mechanical','Insulation','Labour & Processing'];
 
-  function buildSampleItems(){
-    var rows = [
-      ['Body','Shell','Dia 1500 × Lg 1500 × Thk 8',455,1,'perKg',440,'material'],
-      ['Body','Top End','2:1 Ellipsoidal, Thk 10, Blank Dia 1820',208,1,'perKg',495,'material'],
-      ['Body','Bottom End','2:1 Ellipsoidal, Thk 10, Blank Dia 1820',208,1,'perKg',495,'material'],
-      ['Body','Jacket Shell','Dia 1620 × Lg 1000 × Thk 6',246,0,'perKg',310,'material'],
-      ['Body','Jacket Dish (Tori)','Blank Dia 1882 × Thk 6',133,0,'perKg',350,'material'],
-      ['Body','Shell Limpet Coil','Size 80 NB, Thk 3, Pitch 120',140,1,'perKg',240,'material'],
-      ['Body','Dish Limpet Coil','Size 80 NB, Thk 3, Pitch 120',80,1,'perKg',240,'material'],
-      ['Body','Stiffener','Width 40 × Thk 8, Pitch 150',155,0,'perKg',375,'material'],
-      ['Body','Jacket Closer (Top & Bottom)','Dia 1632 × Width 80 × Thk 8',41,0,'perKg',375,'material'],
-
-      ['Connections','Nozzles (Set)','12/25/40/50/80/100/150/200 NB, 150# SCH-40',0,1,'perUnit',95000,'material'],
-      ['Connections','Manhole (MH)','400 ID',0,1,'perUnit',49500,'material'],
-      ['Connections','Spring Loaded Assy','',0,1,'perUnit',4500,'material'],
-
-      ['Agitator & Mechanical','Shaft','Dia 85 × Lg 3610',164,1,'perKg',410,'material'],
-      ['Agitator & Mechanical','Stirrer (Blade)','Lg 7500 × W 100 × Thk 10',60,1,'perKg',420,'material'],
-      ['Agitator & Mechanical','Stirrer (T-Rib)','Lg 7500 × W 50 × Thk 10',30,1,'perKg',420,'material'],
-      ['Agitator & Mechanical','Bush','OD 135 × Lg 125',15,3,'perKg',420,'material'],
-      ['Agitator & Mechanical','Baffle','Lg 1500 × W 125 × Thk 8',12,4,'perKg',420,'material'],
-      ['Agitator & Mechanical','Baffle Support Plate','Lg 155 × W 125 × Thk 10',2,12,'perKg',420,'material'],
-      ['Agitator & Mechanical','Baffle Support Clit','Lg 155 × W 125 × Thk 10',2,12,'perKg',420,'material'],
-      ['Agitator & Mechanical','Lug Support Pad','Lg 300 × W 300 × Thk 8',6,4,'perKg',280,'material'],
-      ['Agitator & Mechanical','Lug Support','',90,1,'perKg',280,'material'],
-      ['Agitator & Mechanical','Lug Cladding','',0,1,'perUnit',0,'material'],
-      ['Agitator & Mechanical','Assembly','',450,1,'perKg',540,'material'],
-      ['Agitator & Mechanical','Guide Bush','',8,1,'perKg',1250,'material'],
-      ['Agitator & Mechanical','Hardware','',0,1,'perUnit',40000,'material'],
-      ['Agitator & Mechanical','Rigid Coupler','',15,1,'perKg',450,'material'],
-      ['Agitator & Mechanical','Gasket','',0,1,'perUnit',0,'material'],
-      ['Agitator & Mechanical','Gearbox & Motor','5 HP, 48 RPM',0,1,'perUnit',40000,'material'],
-      ['Agitator & Mechanical','Mechanical Seal','',0,1,'perUnit',50000,'material'],
-
-      ['Insulation','Insulation Shell','Dia 1756 × Lg 1200 × Thk 3',159,0,'perKg',210,'material'],
-      ['Insulation','Insulation Dish','Tori (7–10%), Blank Dia 2031.6 × Thk 3',78,0,'perKg',240,'material'],
-      ['Insulation','Insulation Closer (Top & Bottom)','Dia 1762 × W 120 × Thk 3',31,0,'perKg',240,'material'],
-      ['Insulation','Insulation (LRB + PUF)','',0,1,'perUnit',0,'material'],
-      ['Insulation','P&F, Protection Guard, Motor Cover','',0,1,'perUnit',45000,'material'],
-
-      ['Labour & Processing','Assembly Charge','',0,1,'perUnit',15000,'labour'],
-      ['Labour & Processing','Shaft Machining','',0,1,'perUnit',14440,'labour'],
-      ['Labour & Processing','Limpet Labour – Shell','80 NB, per metre',0,43,'perUnit',1100,'labour'],
-      ['Labour & Processing','Limpet Labour – Dish','80 NB, per turn',0,6,'perUnit',4000,'labour'],
-      ['Labour & Processing','RT / UT / NDT','',0,1,'perUnit',15000,'labour'],
-      ['Labour & Processing','Balancing','',0,1,'perUnit',15000,'labour'],
-      ['Labour & Processing','MS Labour','per kg',0,90,'perUnit',65,'labour'],
-      ['Labour & Processing','SS Labour','per kg',0,1441,'perUnit',65,'labour'],
-      ['Labour & Processing','Insulation Dish Bending','',0,1,'perUnit',0,'labour'],
-      ['Labour & Processing','Finishing – Inside (Mirror)','',0,135,'perUnit',165,'labour'],
-      ['Labour & Processing','Finishing – Outside (Matt)','',0,135,'perUnit',135,'labour'],
-      ['Labour & Processing','Finishing – MH + Nozzle','',0,1,'perUnit',2500,'labour']
-    ];
-    return rows.map(function(r){
-      return {
-        id: nextId(), section:r[0], part:r[1], desc:r[2], weight:r[3], qty:r[4], basis:r[5], rate:r[6], costType:r[7],
-        weightMode:'manual', calc:null
-      };
-    });
-  }
-
   var state = {
     sections: DEFAULT_SECTIONS.slice(),
     scrapPct: 3, overheadPct: 15, latePct: 0, profitPct: 15, profitMode: 'markup', units: 1,
-    items: buildSampleItems()
+    items: []
   };
 
   /* ================= Helpers ================= */
@@ -790,6 +825,8 @@
       var action = btn.dataset.action;
       if(action === 'cloud-save'){
         cloudSave(btn);
+      } else if(action === 'new-revision'){
+        saveAsNewRevision(btn);
       } else if(action === 'cloud-open'){
         openCloudList();
       } else if(action === 'new-estimate'){
@@ -836,6 +873,7 @@
     return {
       type: 'vessel-agitator',
       meta: readMeta(),
+      vessel: readVesselTech(),
       settings: {
         scrapPct: state.scrapPct, overheadPct: state.overheadPct, latePct: state.latePct,
         profitPct: state.profitPct, profitMode: state.profitMode, units: state.units
@@ -845,7 +883,7 @@
     };
   }
 
-  function cloudSave(btn){
+  function cloudSave(btn, revisionOfId){
     if(isSaving) return;
     if(!currentUser){ window.alert('You must be signed in to save.'); return; }
     isSaving = true;
@@ -862,6 +900,7 @@
     } else {
       payload.createdAt = serverTimestamp();
       payload.createdBy = currentUser.email;
+      if(revisionOfId){ payload.revisionOf = revisionOfId; }
       task = addDoc(collection(db, 'estimates'), payload).then(function(ref){
         currentDocId = ref.id;
       });
@@ -877,6 +916,28 @@
         if(btn){ btn.disabled = false; btn.textContent = originalText; }
       }, 1400);
     });
+  }
+
+  function bumpRevision(rev){
+    var m = /^R(\d+)$/i.exec(String(rev || '').trim());
+    var n = m ? parseInt(m[1], 10) : 0;
+    return 'R' + (n + 1);
+  }
+
+  function saveAsNewRevision(btn){
+    if(!currentUser){ window.alert('You must be signed in to save.'); return; }
+    var oldRev = document.getElementById('revLabel').textContent;
+    var newRev = bumpRevision(oldRev);
+    var ok = window.confirm(
+      'Save this as revision ' + newRev + '?\n\n' +
+      oldRev + ' stays exactly as already saved in the cloud — ' + newRev +
+      ' is saved as a new, separate estimate alongside it.'
+    );
+    if(!ok) return;
+    document.getElementById('revLabel').textContent = newRev;
+    var previousDocId = currentDocId;
+    currentDocId = null;
+    cloudSave(btn, previousDocId);
   }
 
   function openCloudList(){
@@ -926,6 +987,7 @@
       });
       if(d.settings) Object.assign(state, d.settings);
       if(d.meta) writeMeta(d.meta);
+      writeVesselTech(d.vessel || {});
       populateSettingInputs();
       render();
       document.getElementById('cloudModal').style.display = 'none';
@@ -937,13 +999,14 @@
   function startNewEstimate(){
     currentDocId = null;
     state.sections = DEFAULT_SECTIONS.slice();
-    state.items = buildSampleItems();
+    state.items = [];
     state.scrapPct = 3; state.overheadPct = 15; state.latePct = 0;
     state.profitPct = 15; state.profitMode = 'markup'; state.units = 1;
     writeMeta({
-      client: '', equipment: '3 KL Reactor', quotNo: '',
+      client: '', equipment: '', quotNo: '',
       date: new Date().toISOString().slice(0, 10), rev: 'R00'
     });
+    writeVesselTech({});
     populateSettingInputs();
     render();
   }
@@ -966,6 +1029,7 @@
   function exportJSON(){
     var payload = {
       meta: readMeta(),
+      vessel: readVesselTech(),
       settings: {
         scrapPct: state.scrapPct, overheadPct: state.overheadPct, latePct: state.latePct,
         profitPct: state.profitPct, profitMode: state.profitMode, units: state.units
@@ -998,6 +1062,7 @@
         });
         if(data.settings) Object.assign(state, data.settings);
         if(data.meta) writeMeta(data.meta);
+        writeVesselTech(data.vessel || {});
         populateSettingInputs();
         render();
       } catch(err){
@@ -1058,6 +1123,61 @@
       state.profitMode === 'margin' ? 'Profit margin (on final price)' : 'Profit margin (markup on cost)';
   }
 
+  /* ================= Vessel technical details ================= */
+  function readVesselTech(){
+    var mocVessel = document.getElementById('vMocVessel').value;
+    var mocLimpet = document.getElementById('vMocLimpet').value;
+    return {
+      totalCapacity: document.getElementById('vTotalCap').value,
+      operatingCapacity: document.getElementById('vOpCap').value,
+      designPressureVessel: document.getElementById('vDesPresVessel').value,
+      designPressureLimpet: document.getElementById('vDesPresLimpet').value,
+      designTempVessel: document.getElementById('vDesTempVessel').value,
+      designTempLimpet: document.getElementById('vDesTempLimpet').value,
+      hydrotestPressureVessel: document.getElementById('vHydroPresVessel').value,
+      hydrotestPressureLimpet: document.getElementById('vHydroPresLimpet').value,
+      mocVessel: mocVessel === '__other__' ? document.getElementById('vMocVesselOther').value : mocVessel,
+      mocLimpet: mocLimpet === '__other__' ? document.getElementById('vMocLimpetOther').value : mocLimpet
+    };
+  }
+
+  function setMocSelect(selectId, otherId, value){
+    var select = document.getElementById(selectId);
+    var otherInput = document.getElementById(otherId);
+    var knownValues = Array.prototype.map.call(select.options, function(o){ return o.value; });
+    if(value && knownValues.indexOf(value) === -1){
+      select.value = '__other__';
+      otherInput.style.display = '';
+      otherInput.value = value;
+    } else {
+      select.value = value || '';
+      otherInput.style.display = 'none';
+      otherInput.value = '';
+    }
+  }
+
+  function writeVesselTech(v){
+    v = v || {};
+    document.getElementById('vTotalCap').value = v.totalCapacity || '';
+    document.getElementById('vOpCap').value = v.operatingCapacity || '';
+    document.getElementById('vDesPresVessel').value = v.designPressureVessel || '';
+    document.getElementById('vDesPresLimpet').value = v.designPressureLimpet || '';
+    document.getElementById('vDesTempVessel').value = v.designTempVessel || '';
+    document.getElementById('vDesTempLimpet').value = v.designTempLimpet || '';
+    document.getElementById('vHydroPresVessel').value = v.hydrotestPressureVessel || '';
+    document.getElementById('vHydroPresLimpet').value = v.hydrotestPressureLimpet || '';
+    setMocSelect('vMocVessel', 'vMocVesselOther', v.mocVessel || '');
+    setMocSelect('vMocLimpet', 'vMocLimpetOther', v.mocLimpet || '');
+  }
+
+  ['vMocVessel','vMocLimpet'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(e){
+      var otherInput = document.getElementById(id + 'Other');
+      otherInput.style.display = e.target.value === '__other__' ? '' : 'none';
+      if(e.target.value === '__other__') otherInput.focus();
+    });
+  });
+
   /* ================= Meta (title block) fields ================= */
   function readMeta(){
     return {
@@ -1074,17 +1194,20 @@
     if(meta.client != null) document.getElementById('mClient').value = meta.client;
     if(meta.equipment != null){
       document.getElementById('mEquipment').value = meta.equipment;
-      document.getElementById('pageHeading').textContent = meta.equipment || 'Reactor & Vessel Costing';
+      document.getElementById('pageHeading').textContent = meta.equipment || 'New Estimate';
     }
     if(meta.quotNo != null) document.getElementById('mQuotNo').value = meta.quotNo;
     if(meta.date != null) document.getElementById('mDate').value = meta.date;
     if(meta.rev != null) document.getElementById('revLabel').textContent = meta.rev;
   }
   document.getElementById('mEquipment').addEventListener('input', function(e){
-    document.getElementById('pageHeading').textContent = e.target.value || 'Reactor & Vessel Costing';
+    document.getElementById('pageHeading').textContent = e.target.value || 'New Estimate';
   });
 
   /* ================= Init ================= */
+  if(!document.getElementById('mDate').value){
+    document.getElementById('mDate').value = new Date().toISOString().slice(0, 10);
+  }
   render();
 })();
 </script>
