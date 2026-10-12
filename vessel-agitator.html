@@ -222,7 +222,7 @@
     </div>
     <div class="tb-field">
       <label for="mQuotNo">Quotation #</label>
-      <input id="mQuotNo" type="text" placeholder="—" />
+      <input id="mQuotNo" type="text" placeholder="Auto-generated on save" readonly />
     </div>
     <div class="tb-field">
       <label for="mDate">Date</label>
@@ -433,7 +433,7 @@
 <script type="module">
   /* ================= Firebase ================= */
   // Config lives in firebase-init.js (shared by every page) — see SETUP.md.
-  import { auth, db } from './firebase-init.js';
+  import { auth, db, mintQuotationNumber } from './firebase-init.js';
   import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
     collection, addDoc, updateDoc, doc, getDoc, getDocs,
@@ -966,32 +966,52 @@
     var originalText = btn ? btn.textContent : '';
     if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
 
-    var payload = estimatePayload();
-    payload.updatedAt = serverTimestamp();
-    payload.updatedBy = currentUser.email;
+    var finishSave = function(){
+      var payload = estimatePayload();
+      payload.updatedAt = serverTimestamp();
+      payload.updatedBy = currentUser.email;
 
-    var task;
-    if(currentDocId){
-      task = updateDoc(doc(db, 'estimates', currentDocId), payload);
-    } else {
-      payload.createdAt = serverTimestamp();
-      payload.createdBy = currentUser.email;
-      if(revisionOfId){ payload.revisionOf = revisionOfId; }
-      task = addDoc(collection(db, 'estimates'), payload).then(function(ref){
-        currentDocId = ref.id;
+      var task;
+      if(currentDocId){
+        task = updateDoc(doc(db, 'estimates', currentDocId), payload);
+      } else {
+        payload.createdAt = serverTimestamp();
+        payload.createdBy = currentUser.email;
+        if(revisionOfId){ payload.revisionOf = revisionOfId; }
+        task = addDoc(collection(db, 'estimates'), payload).then(function(ref){
+          currentDocId = ref.id;
+        });
+      }
+
+      task.then(function(){
+        if(btn){ btn.textContent = '✓ Saved'; }
+      }).catch(function(err){
+        window.alert('Could not save to cloud: ' + (err && err.message ? err.message : err));
+      }).finally(function(){
+        isSaving = false;
+        setTimeout(function(){
+          if(btn){ btn.disabled = false; btn.textContent = originalText; }
+        }, 1400);
       });
-    }
+    };
 
-    task.then(function(){
-      if(btn){ btn.textContent = '✓ Saved'; }
-    }).catch(function(err){
-      window.alert('Could not save to cloud: ' + (err && err.message ? err.message : err));
-    }).finally(function(){
-      isSaving = false;
-      setTimeout(function(){
+    // A quotation number is only minted (and the counter only advanced) right
+    // here, at the moment of a real save — never just from opening a blank
+    // estimate. If one's already assigned (an existing estimate, or an
+    // earlier revision), it's carried forward as-is rather than reassigned.
+    var quotField = document.getElementById('mQuotNo');
+    if(!quotField.value.trim()){
+      mintQuotationNumber().then(function(num){
+        quotField.value = num;
+        finishSave();
+      }).catch(function(err){
+        isSaving = false;
         if(btn){ btn.disabled = false; btn.textContent = originalText; }
-      }, 1400);
-    });
+        window.alert('Could not generate a quotation number: ' + (err && err.message ? err.message : err));
+      });
+    } else {
+      finishSave();
+    }
   }
 
   function bumpRevision(rev){

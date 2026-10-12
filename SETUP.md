@@ -42,6 +42,9 @@ No environment variables or secrets are needed — the Firebase web config is me
 /firestore.rules       → paste into Firebase console, not deployed as a file
 ```
 
+## Updating Firestore rules later
+Whenever `firestore.rules` in this drop differs from what you've already published (e.g. this update adds a `counters` collection for auto quotation numbers), copy the new contents into Firebase console → Build → Firestore Database → Rules tab → Publish. Nothing else needs touching for a rules-only change.
+
 ## What's next (later phases, not in this drop)
 - Offer/Quotation generator page, plus a Cloudflare Worker for sequential offer numbering and/or server-rendered PDFs
 - Heat Exchanger calculator (`heat-exchanger.html`) — reuses `theme.css` and `firebase-init.js` as-is
