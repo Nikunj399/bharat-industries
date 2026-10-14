@@ -37,8 +37,13 @@ No environment variables or secrets are needed — the Firebase web config is me
 ```
 /index.html            → login + dashboard (3 calculator cards, recent estimates)
 /vessel-agitator.html  → Vessel + Agitator calculator
+/offer.html            → Offer Details page + 3-page quotation PDF (opened from an estimate)
+/offer-render.js       → builds the 3 offer pages (company details + standard terms live here)
+/offer-sheet.css       → A4 layout/typography for the offer
+/bharat-logo.png       → company logo used on every offer page
 /theme.css             → shared visual design system (used by every page)
 /firebase-init.js      → Firebase config + auth/db exports (edit config here only)
+/wrangler.jsonc        → Cloudflare static-assets config
 /firestore.rules       → paste into Firebase console, not deployed as a file
 ```
 

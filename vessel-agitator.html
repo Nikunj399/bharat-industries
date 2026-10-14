@@ -240,6 +240,7 @@
       <button class="btn btn-primary" data-action="cloud-save" type="button">☁ Save to Cloud</button>
       <button class="btn" data-action="new-revision" type="button">🔁 Save as New Revision</button>
       <button class="btn" data-action="revision-history" type="button">🕘 Revision History</button>
+      <button class="btn btn-primary" data-action="generate-offer" type="button">📄 Generate Offer</button>
       <button class="btn" data-action="cloud-open" type="button">📂 Open Saved</button>
       <button class="btn btn-ghost" data-action="new-estimate" type="button">＋ New Estimate</button>
       <button class="btn btn-ghost" data-action="add-section" type="button">+ Add section</button>
@@ -737,7 +738,7 @@
   }
 
   /* ================= Summary calculation ================= */
-  function updateSummary(){
+  function computeTotals(){
     var materialItems = state.items.filter(function(i){ return i.costType === 'material'; });
     var labourItems = state.items.filter(function(i){ return i.costType === 'labour'; });
 
@@ -764,6 +765,20 @@
     }
     var effMargin = finalPrice > 0 ? (profitAmt / finalPrice) * 100 : 0;
     var orderValue = finalPrice * (num(state.units) || 1);
+
+    return {
+      rmc: rmc, labour: labour, totalWeight: totalWeight, scrapAmt: scrapAmt, overheadAmt: overheadAmt,
+      baseCost: baseCost, lateAmt: lateAmt, costAfterLate: costAfterLate, profitAmt: profitAmt,
+      effMargin: effMargin, finalPrice: finalPrice, orderValue: orderValue, units: (num(state.units) || 1)
+    };
+  }
+
+  function updateSummary(){
+    var t = computeTotals();
+    var rmc = t.rmc, labour = t.labour, totalWeight = t.totalWeight, scrapAmt = t.scrapAmt,
+        overheadAmt = t.overheadAmt, baseCost = t.baseCost, lateAmt = t.lateAmt,
+        costAfterLate = t.costAfterLate, profitAmt = t.profitAmt, effMargin = t.effMargin,
+        finalPrice = t.finalPrice, orderValue = t.orderValue;
 
     document.getElementById('sumWeight').textContent = Math.round(totalWeight).toLocaleString('en-IN') + ' kg';
     document.getElementById('sumRMC').textContent = formatCurrency(rmc);
@@ -876,6 +891,8 @@
         saveAsNewRevision(btn);
       } else if(action === 'revision-history'){
         openRevisionHistory();
+      } else if(action === 'generate-offer'){
+        generateOffer(btn);
       } else if(action === 'cloud-open'){
         openCloudList();
       } else if(action === 'new-estimate'){
@@ -943,9 +960,18 @@
     document.title = docName();
   }
 
+  // What the Offer page needs: the selling price (per unit and for the order).
+  // Internal cost build-up (RMC, overhead, margin) is deliberately NOT stored here.
+  function offerTotals(){
+    var t = computeTotals();
+    function r2(n){ return Math.round(n * 100) / 100; }
+    return { unitPrice: r2(t.finalPrice), units: t.units, orderValue: r2(t.orderValue), totalWeight: Math.round(t.totalWeight) };
+  }
+
   function estimatePayload(){
     return {
       type: 'vessel-agitator',
+      totals: offerTotals(),
       familyId: currentFamilyId,
       revisionNumber: revNumber(document.getElementById('revLabel').textContent),
       meta: readMeta(),
@@ -959,7 +985,7 @@
     };
   }
 
-  function cloudSave(btn, revisionOfId){
+  function cloudSave(btn, revisionOfId, onSaved){
     if(isSaving) return;
     if(!currentUser){ window.alert('You must be signed in to save.'); return; }
     isSaving = true;
@@ -985,6 +1011,7 @@
 
       task.then(function(){
         if(btn){ btn.textContent = '✓ Saved'; }
+        if(typeof onSaved === 'function') onSaved();
       }).catch(function(err){
         window.alert('Could not save to cloud: ' + (err && err.message ? err.message : err));
       }).finally(function(){
@@ -1012,6 +1039,18 @@
     } else {
       finishSave();
     }
+  }
+
+  // Saves the estimate first (so the offer always sees the latest price and a real
+  // quotation number), then opens the Offer page for this exact estimate revision.
+  function generateOffer(btn){
+    if(!currentUser){ window.alert('You must be signed in.'); return; }
+    if(computeTotals().finalPrice <= 0){
+      if(!window.confirm('This estimate has no calculated price yet (total is 0). Open the offer page anyway?')) return;
+    }
+    cloudSave(btn, null, function(){
+      window.location.href = 'offer.html?estimateId=' + encodeURIComponent(currentDocId);
+    });
   }
 
   function bumpRevision(rev){

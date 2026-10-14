@@ -19,5 +19,15 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // One offer document per estimate revision (document id = the estimate's id).
+    match /offers/{offerId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Shared standard settings, e.g. settings/offerDefaults (standard terms, signatory).
+    match /settings/{settingId} {
+      allow read, write: if request.auth != null;
+    }
+
   }
 }

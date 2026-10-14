@@ -1,0 +1,150 @@
+/* ============================================================
+   Offer sheets (A4). Used for both the on-screen preview and the
+   printed/PDF output. Font sizes inside a sheet are in em so the
+   auto-fit logic can scale a whole page by changing one value.
+   ============================================================ */
+
+.sheet{
+  --of-brand:#0068a7;
+  --of-ink:#1b1b1b;
+  --of-line:#3b3b3b;
+  --of-tint:#e9f1f7;
+
+  position:relative;
+  width:210mm;
+  height:296mm;
+  box-sizing:border-box;
+  background:#fff;
+  color:var(--of-ink);
+  font-family:Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
+  font-size:10pt;
+  line-height:1.45;
+  overflow:hidden;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+.sheet *{ box-sizing:border-box; }
+
+/* ---------- Header / body / footer frame ---------- */
+.sh-head{
+  position:absolute; top:9mm; left:16mm; right:16mm; height:28mm;
+  display:flex; justify-content:flex-end; align-items:flex-start;
+}
+.sh-logo{ height:27mm; width:auto; display:block; }
+
+.sh-body{
+  position:absolute; left:16mm; right:16mm; top:40mm; bottom:29mm;
+  overflow:hidden;
+}
+
+.sh-foot{
+  position:absolute; left:16mm; right:16mm; bottom:9mm;
+  text-align:center; font-size:8.5pt; line-height:1.55; color:#2c2c2c;
+  border-top:1.5px solid var(--of-brand); padding-top:2.6mm;
+}
+.sh-foot .iso{ font-weight:bold; color:#111; margin-top:.4mm; }
+
+/* ---------- Page 1: cover letter ---------- */
+.cl{ font-size:1.05em; line-height:1.6; }
+.cl p{ margin:0 0 4.4mm; }
+.cl-meta{ margin-bottom:8mm; }
+.cl-to{ margin-bottom:4mm; }
+.cl-client{ font-weight:bold; }
+.cl-attn{ font-weight:bold; margin:0 0 6mm; }
+.cl-subject{ margin-top:2mm; }
+.cl-regards{ margin-top:8mm; margin-bottom:1mm !important; }
+.cl-for{ margin-bottom:0 !important; }
+.cl-signspace{ height:22mm; }
+.cl-encl{ margin-top:12mm; font-size:.9em; color:#333; border-top:1px solid #cfd6dc; padding-top:3mm; }
+
+/* ---------- Page 2: quotation ---------- */
+.q-title{
+  text-align:center; font-weight:bold; font-size:1.45em; letter-spacing:.12em;
+  color:var(--of-brand); margin:0 0 1mm;
+}
+.q-format{ text-align:right; font-size:.8em; color:#444; margin-bottom:1.5mm; }
+
+table.q{
+  width:100%; border-collapse:collapse; table-layout:fixed; font-size:.95em;
+}
+table.q td, table.q th{
+  border:1px solid var(--of-line); padding:1.2mm 2mm; vertical-align:top;
+}
+table.q col.c-sr{ width:13mm; }
+table.q col.c-qty{ width:18mm; }
+table.q col.c-rate{ width:28mm; }
+table.q col.c-amt{ width:30mm; }
+
+.q-to{ line-height:1.5; }
+.q-to .to-label{ font-weight:bold; }
+.q-to .to-name{ font-weight:bold; }
+.q-to .to-gst{ margin-top:1mm; }
+.q-meta{ font-size:.95em; vertical-align:middle !important; }
+.q-meta .mk{ font-size:.88em; letter-spacing:.03em; color:#333; }
+
+.q-head th{
+  background:var(--of-tint); font-size:.84em; letter-spacing:.05em; text-align:center;
+  padding:2mm 1mm; vertical-align:middle; white-space:nowrap;
+}
+.q-item td.ctr{ text-align:center; }
+.q-item td.rgt{ text-align:right; }
+.q-item td.b{ font-weight:bold; }
+
+.desc-wrap{ display:flex; flex-direction:column; }
+.d-title{ font-weight:bold; font-size:1.06em; margin-bottom:1.6mm; }
+.d-scope{ margin-bottom:2.4mm; text-align:left; }
+.d-specs{ margin:0 0 2.4mm; padding-left:5mm; }
+.d-specs li{ margin:0 0 .8mm; }
+.d-foot{ margin-top:1mm; }
+.d-hsn{ margin-top:auto; padding-top:3mm; text-align:right; font-weight:bold; }
+
+td.q-blank{ border-bottom:none; }
+td.tl{ font-weight:bold; text-align:center; white-space:nowrap; padding:1mm 2mm; }
+td.tv{ font-weight:bold; text-align:right; padding:1mm 2mm; }
+td.tv.note{ text-align:center; vertical-align:middle; font-size:.9em; }
+tr.tot td.tl, tr.tot td.tv{ background:var(--of-tint); }
+
+.inwords{ padding:2mm 2.2mm; }
+.q-end td{ vertical-align:top; }
+.sc-title{ font-weight:bold; text-decoration:underline; margin-bottom:.8mm; }
+.sc-text{ margin-bottom:1.5mm; }
+.annex{ margin-top:1mm; }
+.annex-row{ display:flex; gap:3mm; font-size:.95em; }
+.annex-row .an-no{ width:5mm; flex-shrink:0; }
+.q-sign{ text-align:center; }
+.sg-for{ font-size:1.02em; }
+.sg-space{ height:17mm; }
+.sg-auth{ font-weight:bold; }
+
+/* ---------- Page 3: terms & conditions ---------- */
+.tc-title{ text-align:center; font-weight:bold; font-size:1.2em; letter-spacing:.08em; color:var(--of-brand); }
+.tc-sub{ text-align:center; font-weight:bold; text-decoration:underline; margin:.5mm 0 4mm; }
+table.tc{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:.95em; }
+table.tc th, table.tc td{ border:1px solid var(--of-line); padding:1.15mm 2.2mm; vertical-align:top; line-height:1.38; }
+table.tc th{
+  width:37mm; text-align:left; font-weight:normal; font-size:.93em; letter-spacing:.02em;
+  background:var(--of-tint);
+}
+.tc-close{ margin-top:4mm; font-size:.96em; }
+.tc-close p{ margin:0 0 2.2mm; }
+.tc-regards{ margin-top:3.5mm; text-align:right; font-size:.96em; line-height:1.5; }
+.tc-name{ margin-top:1.5mm; }
+
+/* ---------- Screen preview framing ---------- */
+.sheets-stack{ width:210mm; transform-origin:top left; }
+.sheets-stack .sheet{
+  margin:0 0 10mm; box-shadow:0 1px 3px rgba(0,0,0,.18), 0 8px 26px rgba(0,0,0,.14);
+}
+.sheets-stack .sheet:last-child{ margin-bottom:0; }
+
+/* ---------- Print ---------- */
+@page{ size:A4; margin:0; }
+@media print{
+  html, body{ background:#fff !important; margin:0 !important; padding:0 !important; }
+  .sheets-stack{ transform:none !important; width:210mm !important; }
+  .sheets-stack .sheet{
+    margin:0 !important; box-shadow:none !important;
+    break-after:page; page-break-after:always;
+  }
+  .sheets-stack .sheet:last-child{ break-after:auto; page-break-after:auto; }
+}
